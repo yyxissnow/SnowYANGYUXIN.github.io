@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go逃逸分析 | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="理解Go逃逸分析的原理和出现场景可以帮助我们写出更好的程序，提升代码运行效率">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go逃逸分析">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/10/15/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="理解Go逃逸分析的原理和出现场景可以帮助我们写出更好的程序，提升代码运行效率">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/image-20210801171749935.png">
+<meta property="article:published_time" content="2021-10-15T06:08:48.000Z">
+<meta property="article:modified_time" content="2021-10-15T06:08:48.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://snowyangyuxin.github.io/img/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/image-20210801171749935.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Go内存逃逸" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/10/15/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/" class="article-date">
+  <time datetime="2021-10-15T06:08:48.000Z" itemprop="datePublished">2021-10-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go逃逸分析
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在优化公司之前实习生写的后端代码，在db层这里</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">CreateXxx</span><span class="hljs-params">(xx *model.Xxx)</span> <span class="hljs-title">error</span></span> &#123;<br>   <span class="hljs-keyword">return</span> db.Database.Create(&amp;xx).Error<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>当时觉得只是创建，则不需要传结构体指针，并且觉得传了指针后引起内存逃逸，增加GC压力，后续中总觉得是传指针可能不一定就会引发内存逃逸，则查阅了相关资料和自己之前做的笔记，对此情况做一个详细的说明</p>
+<h1 id="堆和栈"><a href="#堆和栈" class="headerlink" title="堆和栈"></a>堆和栈</h1><p>Go有两个地方可以分配内存：一个全局堆空间用来<strong>动态分配内存</strong> (<strong>new  make</strong>)，另一个是每个goroutine都有的自身栈空间(<strong>初始是2k</strong>)</p>
+<p><img src="/img/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/image-20210801171749935.png" alt="image-20210801171749935"></p>
+<blockquote>
+<p>栈</p>
+</blockquote>
+<p>栈区内存一般由<strong>编译器自动进行分配和释放</strong>，其中存储着函数的入参以及局部变量，这些参数会<strong>随着函数的创建而创建，函数的返回而销毁</strong>（通过<code>CPU push &amp; release</code> ）</p>
+<p>​    </p>
+<blockquote>
+<p>堆</p>
+</blockquote>
+<p>堆区的内存一般由<strong>编译器和工程师自己共同进行管理分配</strong>，交给 <strong>Runtime GC</strong> 来释放。堆上分配必须找到一块足够大的内存来存放新的变量数据。后续释放时，垃圾回收器扫描空间寻找不再被使用的对象</p>
+<p>任何时候一个值出了一个函数的作用域，它就会被自动分配到堆上 (<strong>由编译器分析</strong>出来是否有<strong>逃逸行为</strong>)</p>
+<p>​    </p>
+<p><strong>栈分配廉价，堆分配昂贵</strong></p>
+<p>Go声明语法并没有提到栈和堆，而是交给GO编译器决定在哪分配内存，保证程序的正确性</p>
+<h1 id="逃逸分析"><a href="#逃逸分析" class="headerlink" title="逃逸分析"></a>逃逸分析</h1><p>通过检查变量的作用域是否超出它所在的栈来决定是否将它分配在堆上的技术，其中<strong>变量的作用域超出它所在的栈这种行为即被称为逃逸</strong>。逃逸分析在大多数语言里属于静态分析：在编译期由静态代码分析来决定一个值是否能被分配在栈帧上，还是需要逃逸到堆上</p>
+<ul>
+<li>减少GC压力，栈的变量，随着函数退出后系统直接回收，不需要标记后清除</li>
+<li>减少内存碎片的产生</li>
+<li>减轻分配堆内存的开销，提高程序的运行速度</li>
+</ul>
+<p>​    </p>
+<p>Go语言虽然没有明确说明逃逸分析规则，但是有以下几点准则，是可以参考的</p>
+<ul>
+<li>逃逸分析是在编译器完成的，这是不同于jvm的运行时逃逸分析</li>
+<li>如果变量在函数外部没有引用，则优先放到栈中</li>
+<li>如果变量在函数<strong>外部存在引用</strong>，则<strong>必定放在堆中</strong></li>
+</ul>
+<p>​    </p>
+<p>可以通过 <code>go build -gcflags -m xxx.go</code> 命令来查看逃逸分析结果，其中<code>-m </code>打印逃逸分析信息</p>
+<h1 id="逃逸案例"><a href="#逃逸案例" class="headerlink" title="逃逸案例"></a>逃逸案例</h1><blockquote>
+<p>变量类型不确定</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	a := <span class="hljs-number">666</span><br>	fmt.Println(a)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>因为<code>fmt.Println</code>的函数参数为<code>interface</code>类型，编译期不能确定其参数的具体类型，所以将其分配于堆上</p>
+<p>​    </p>
+<blockquote>
+<p>暴露给外部指针</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">foo</span><span class="hljs-params">()</span> *<span class="hljs-title">int</span></span> &#123;<br>	a := <span class="hljs-number">666</span><br>	<span class="hljs-keyword">return</span> &amp;a<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>    <span class="hljs-keyword">var</span> num *<span class="hljs-keyword">int</span><br>	num= foo()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>变量所占内存较大</p>
+</blockquote>
+<p>Go中常说的<code>goroutine</code>初始大小为<code>2KB</code>，就是指用户栈，而堆则会大很多，所以，为了不造成栈溢出和频繁的扩缩容，<strong>大的对象分配在堆上更加合理</strong></p>
+<p>​    </p>
+<blockquote>
+<p>变量大小不确定</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">foo</span><span class="hljs-params">()</span></span> &#123;<br>	n := <span class="hljs-number">1</span><br>	s := <span class="hljs-built_in">make</span>([]<span class="hljs-keyword">int</span>, n)<br>	<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">len</span>(s); i++ &#123;<br>		s[i] = i<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	foo()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在<code>make</code>方法中，没有直接指定大小，而是填入了变量<code>n</code>，这时Go逃逸分析也会将其分配到堆区去。可见，为了保证内存的绝对安全，Go的编译器可能会将一些变量不合时宜地分配到堆上</p>
+<p>​    </p>
+<blockquote>
+<p>发送指针或带有指针的值到channel中</p>
+</blockquote>
+<p>在编译时，是没有办法知道哪个 <code>goroutine</code> 会在 <code>channel</code> 上接收数据。所以编译器没法知道变量什么时候才会被释放</p>
+<p>​    </p>
+<blockquote>
+<p>在一个切片上存储或带有指针的值</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>   <span class="hljs-keyword">var</span> s []*Student<br>   s=<span class="hljs-built_in">append</span>(s,&amp;Student&#123;Name: <span class="hljs-string">&quot;ice&quot;</span>&#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>一个典型的例子就是 <code>[]*string</code>。这会导致切片的内容逃逸。尽管其后面的数组可能是在栈上分配的，但其引用的值一定是在堆上</p>
+<p>​    </p>
+<blockquote>
+<p>slice背后的数组被重新分配 (地址要改变)</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//发生了逃逸 因为底层数组扩容数组会重新分配</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">AddNum</span><span class="hljs-params">(a *[]<span class="hljs-keyword">int</span>)</span></span>&#123;<br>   *a=<span class="hljs-built_in">append</span>(*a,<span class="hljs-number">99</span>)<br>&#125;<br><span class="hljs-comment">//没有发生逃逸 因为没有扩容底层数组没有改变</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">UpdateNum</span><span class="hljs-params">(a *[]<span class="hljs-keyword">int</span>)</span></span>&#123;<br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(*a) &gt; <span class="hljs-number">0</span> &#123;<br>		(*a)[<span class="hljs-number">0</span>] = <span class="hljs-number">1</span><br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>参考之前 <a href="https://snowyangyuxin.github.io/2021/07/29/Go%E5%88%87%E7%89%87%E5%9C%A8%E5%87%BD%E6%95%B0%E4%B8%AD%E7%9A%84%E4%BC%A0%E9%80%92/">Go切片在函数中的传递</a>知，在切片作为参数传递时，如果append引发扩容就会<strong>重新分配底层数组的地址</strong></p>
+<p>slice 初始化的地方在编译时是可以知道的，它最开始会在栈上分配。如果切片背后的存储要基于运行时的数据进行扩充，就会在堆上分配</p>
+<p>​    </p>
+<blockquote>
+<p>在interface类型上调用方法</p>
+</blockquote>
+<p>在 interface 类型上调用方法都是动态调度的 —— 方法的真正实现只能在运行时知道</p>
+<p>​    </p>
+<blockquote>
+<p>外部是否发生引用</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> global *<span class="hljs-keyword">int</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	<span class="hljs-keyword">var</span> x <span class="hljs-keyword">int</span><br>	x = <span class="hljs-number">1</span><br>	global = &amp;x<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>函数里的<code>x</code>变量在堆上分配，因为它在函数退出后依然可以通过<code>global</code>变量找到，虽然它是在函数内部定义的</p>
+<h1 id="指针逃逸的总结"><a href="#指针逃逸的总结" class="headerlink" title="指针逃逸的总结"></a>指针逃逸的总结</h1><blockquote>
+<p>指针必然发生逃逸的三种情况</p>
+</blockquote>
+<ul>
+<li><p>在某个函数中<code>new</code>或字面量创建出的变量，将其指针作为函数返回值，则该变量一定发生逃逸（构造函数返回的指针变量一定逃逸）</p>
+</li>
+<li><p>被已经逃逸的变量引用的指针，一定发生逃逸</p>
+</li>
+<li><p>被指针类型的<code>slice、map和chan</code>引用的指针，一定发生逃逸</p>
+</li>
+</ul>
+<p>​    </p>
+<blockquote>
+<p>指针必然不会逃逸的情况</p>
+</blockquote>
+<ul>
+<li><p>指针被未发生逃逸的变量引用；</p>
+</li>
+<li><p>仅仅在函数内对变量做取址操作，而未将指针传出；</p>
+</li>
+</ul>
+<p>​    </p>
+<blockquote>
+<p>指针有一些情况可能发生逃逸，也可能不会发生逃逸</p>
+</blockquote>
+<ul>
+<li>将指针作为入参传给别的函数；这里还是要看指针在被传入的函数中的处理过程，如果发生了上边的三种情况，则会逃逸；否则不会逃逸</li>
+</ul>
+<h1 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h1><ul>
+<li><p>现在说明在函数传参传指针不应定会发生内存逃逸，要结合实际情况，看函数中是否将参数传入<code>interface</code>参数的函数中等</p>
+</li>
+<li><p>理解逃逸分析一定能帮助写出更好的程序。知道变量分配在栈堆之上的差别，那么我们就要尽量写出分配在栈上的代码，堆上的变量变少了，可以减轻内存分配的开销，减小gc的压力，提高程序的运行速度</p>
+</li>
+<li><p>不要盲目使用变量的指针作为函数参数，虽然它会减少复制操作。但其实当参数为变量自身的时候，复制是在栈上完成的操作，开销远比变量逃逸后动态地在堆上分配内存少的多 (可能会发生逃逸)</p>
+</li>
+<li><p>尽量写出少一些逃逸的代码，提升程序的运行效率</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/10/15/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/" data-id="ckywz5jao0015scpcdbqj5blf" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Docker快速部署ELK
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/09/26/Go_k8s/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go调用K8S</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

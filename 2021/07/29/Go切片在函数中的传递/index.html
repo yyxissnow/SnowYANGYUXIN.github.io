@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go切片在函数中的传递 | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在Go中虽然切片是引用类型，但是在函数传递时却是值类型传递">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go切片在函数中的传递">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/07/29/Go%E5%88%87%E7%89%87%E5%9C%A8%E5%87%BD%E6%95%B0%E4%B8%AD%E7%9A%84%E4%BC%A0%E9%80%92/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="在Go中虽然切片是引用类型，但是在函数传递时却是值类型传递">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-07-29T12:54:18.000Z">
+<meta property="article:modified_time" content="2021-07-29T12:54:18.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Go切片在函数中的传递" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/07/29/Go%E5%88%87%E7%89%87%E5%9C%A8%E5%87%BD%E6%95%B0%E4%B8%AD%E7%9A%84%E4%BC%A0%E9%80%92/" class="article-date">
+  <time datetime="2021-07-29T12:54:18.000Z" itemprop="datePublished">2021-07-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go切片在函数中的传递
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在优化之前实习生的代码，在做<code>control</code>层和<code>db</code>层之间参数传递的时候，老师提出了切片就是引用类型，那么在使用数据库<code>Find</code>功能时只需要传<code>model</code>切片即可，就不需要传切片指针了，但是自己在实验的时候发现直接传切片时无法获取值的，只有传切片指针才行</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//传切片</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GetArticles</span><span class="hljs-params">(articles []model.Article)</span> <span class="hljs-title">error</span></span> &#123;<br>	<span class="hljs-keyword">return</span> db.GetMysqlDB().Order(<span class="hljs-string">&quot;id desc&quot;</span>).Find(&amp;articles).Error<br>&#125;<br><span class="hljs-comment">//传切片指针</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GetArticles</span><span class="hljs-params">(articles *[]model.Article)</span> <span class="hljs-title">error</span></span> &#123;<br>	<span class="hljs-keyword">return</span> db.GetMysqlDB().Order(<span class="hljs-string">&quot;id desc&quot;</span>).Find(&amp;articles).Error<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>后对此情况对网上的参考资料引用了大部分，做了少许修改的标注</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/LYue123/article/details/88363685?utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-2.base&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-2.base">引用参考相关文章</a></p>
+<h1 id="slice的参数"><a href="#slice的参数" class="headerlink" title="slice的参数"></a>slice的参数</h1><p>切片和数组是不一样的，数组是值类型，切片时引用类型，则我们相信在函数中传递地址切片，函数中改变，会直接影响到函数外与之对应的切片，现在做一个实验验证下想法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>   s := []<span class="hljs-keyword">int</span>&#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>&#125;<br>   SliceTest1(s)<br>   fmt.Println(s)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SliceTest1</span><span class="hljs-params">(num []<span class="hljs-keyword">int</span>)</span></span> &#123;<br>   <span class="hljs-keyword">if</span> num != <span class="hljs-literal">nil</span> &amp;&amp; <span class="hljs-built_in">len</span>(num) &gt;= <span class="hljs-number">1</span> &#123;<br>      num[<span class="hljs-number">0</span>]=<span class="hljs-number">666</span><br>      <span class="hljs-keyword">return</span><br>   &#125;<br>   <span class="hljs-keyword">return</span><br>&#125;<br><span class="hljs-comment">//[666 2 3]</span><br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p>上面的代码结果验证了我们的想法，但是在函数中打印切片的地址，则会发现<strong>和函数外对应的切片地址不一样</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>   num := []<span class="hljs-keyword">int</span>&#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>&#125;<br>   fmt.Printf(<span class="hljs-string">&quot;main addr is %p\n&quot;</span>,&amp;num)<br>   SliceTest1(num)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SliceTest1</span><span class="hljs-params">(num []<span class="hljs-keyword">int</span>)</span></span> &#123;<br>   fmt.Printf(<span class="hljs-string">&quot;function slice addr is %p\n&quot;</span>,&amp;num)<br>   <span class="hljs-keyword">if</span> num != <span class="hljs-literal">nil</span> &amp;&amp; <span class="hljs-built_in">len</span>(num) &gt;= <span class="hljs-number">1</span> &#123;<br>      num[<span class="hljs-number">0</span>]=<span class="hljs-number">666</span><br>      <span class="hljs-keyword">return</span><br>   &#125;<br>   <span class="hljs-keyword">return</span><br>&#125;<br><span class="hljs-comment">//main addr is 0xc0000044a0</span><br><span class="hljs-comment">//function slice addr is 0xc0000044e0</span><br></code></pre></td></tr></table></figure>
+
+<p>此时我们需要先了解下slice的实现</p>
+<h1 id="Slice的实现"><a href="#Slice的实现" class="headerlink" title="Slice的实现"></a>Slice的实现</h1><p>切片不等同于数组，但他依赖数组实现的，切片是一种复合结构，它由三部分组成的，第一部分是底层数组的指针<code>ptr</code>，第二部分是切片大小<code>len</code>，最后是切片容量<code>cap</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SliceTest2</span><span class="hljs-params">()</span></span> &#123;<br>   num := [<span class="hljs-number">5</span>]<span class="hljs-keyword">int</span>&#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>&#125;<br>   slice := num[<span class="hljs-number">1</span>:<span class="hljs-number">4</span>]<br>   slice2 := num[<span class="hljs-number">2</span>:<span class="hljs-number">5</span>]<br>   fmt.Printf(<span class="hljs-string">&quot;slice: %v,slice addr %p\n&quot;</span>, slice, &amp;slice)<br>   fmt.Printf(<span class="hljs-string">&quot;slice: %v,slice addr %p\n&quot;</span>, slice2, &amp;slice2)<br>   num[<span class="hljs-number">2</span>] = <span class="hljs-number">11</span><br>   fmt.Printf(<span class="hljs-string">&quot;slice: %v,slice addr %p\n&quot;</span>, slice, &amp;slice)<br>   fmt.Printf(<span class="hljs-string">&quot;slice: %v,slice addr %p&quot;</span>, slice2, &amp;slice2)<br>&#125;<br><span class="hljs-comment">//slice: [2 3 4],slice addr 0xc0000044a0</span><br><span class="hljs-comment">//slice: [3 4 5],slice addr 0xc0000044c0</span><br><span class="hljs-comment">//slice: [2 11 4],slice addr 0xc0000044a0</span><br><span class="hljs-comment">//slice: [11 4 5],slice addr 0xc0000044c0</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>我们看这个例子，有一个5个元素的数组，slice，slice2分别截取了数组的一部分，并且有共同的一部分，我们现在能明确的就是，<strong>两个切片共用一个数组</strong>，所以一个改变都改变，还有就是<strong>两个数组是两个不同的对象，很明显内存地址不同</strong></li>
+<li>从数组中切一块下来形成切片很好理解，有时候我们用make函数创建切片，实际上golang会在底层创建一个匿名的数组。如果从新的slice再切，那么<strong>新创建的两个切片都共享这个底层的匿名数组</strong></li>
+</ul>
+<h1 id="作为函数切片的参数"><a href="#作为函数切片的参数" class="headerlink" title="作为函数切片的参数"></a>作为函数切片的参数</h1><p>回到最开始的问题，当函数的参数是切片的时候，到底是传值还是传引用？从changeSlice函数中打出的参数s的地址，可以看出肯定不是传引用，毕竟引用都是一个地址才对。然而changeSlice函数内改变了s的值，也改变了原始变量slice的值，这个看起来像引用的现象，实际上正是我们前面讨论的切片共享底层数组的实现</p>
+<p><strong>即切片传递的时候，传的是数组的值</strong>，等效于从原始切片中再切了一次。<strong>原始切片slice和参数s切片的底层数组是一样的</strong>。因此修改函数内的切片，也就修改了数组</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>   num := []<span class="hljs-keyword">int</span>&#123;<span class="hljs-number">0</span>, <span class="hljs-number">1</span>&#125;<br>   SliceTest3(num)<br>   fmt.Println(num)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SliceTest3</span><span class="hljs-params">(num []<span class="hljs-keyword">int</span>)</span></span> &#123;<br>	num = <span class="hljs-built_in">append</span>(num, <span class="hljs-number">2</span>)<br>	fmt.Println(num)<br>&#125;<br><span class="hljs-comment">//[0 1 2]</span><br><span class="hljs-comment">//[0 1]</span><br></code></pre></td></tr></table></figure>
+
+<p>Slice或者array作为函数参数传递的时候，<strong>本质是传值而不是传引用</strong>。传值的过程复制一个新的切片，这个切片也指向原始变量的底层数组。（个人感觉称之为传切片可能比传值的表述更准确）。函数中无论是直接修改切片，还是append创建新的切片，都是基于共享切片底层数组的情况作为基础。也就是最外面的原始切片是否改变，取决于函数内的操作和切片本身容量</p>
+<p>​    </p>
+<p><strong>如果想要传引用的时候怎么办的，则传地址即可</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>   num := []<span class="hljs-keyword">int</span>&#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>&#125;<br>   SliceTest4(&amp;num)<br>   fmt.Println(num)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SliceTest4</span><span class="hljs-params">(num *[]<span class="hljs-keyword">int</span>)</span></span> &#123;<br>   *num = <span class="hljs-built_in">append</span>(*num, <span class="hljs-number">2</span>)<br>   fmt.Println(*num)<br>&#125;<br><span class="hljs-comment">//[0 1 2]</span><br><span class="hljs-comment">//[0 1 2]</span><br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>golang提供了array和slice两种序列结构。其中array是值类型。<strong>slice则是复合类型</strong>。slice是基于array实现的。slice的第一个内容为指向数组的指针，然后是其长度和容量。通过array的切片可以切出slice，也可以使用make创建slice，此时golang会生成一个匿名的数组</p>
+<p>因为slice依赖其底层的array，修改slice本质是修改array，而array又是有大小限制，当超过slice的容量，即数组越界的时候，需要通过动态规划的方式创建一个新的数组块。把原有的数据复制到新数组<strong>，这个新的array则为slice新的底层依赖</strong></p>
+<p>数组还是切片，在函数中传递的不是引用，是另外一种值类型，即通过原始变量进行切片传入。函数内的操作即对切片的修改操作了。当然，<strong>如果为了修改原始变量，可以指定参数的类型为指针类型</strong>。传递的就是slice的内存地址。函数内的操作都是根据内存地址找到变量本身</p>
+<p>​    </p>
+<p><strong>则在最开始db层操作中，因为传入的肯定是空的model切片，在查找时必定会发生扩容，则此时就需要传入切片指针才行</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/07/29/Go%E5%88%87%E7%89%87%E5%9C%A8%E5%87%BD%E6%95%B0%E4%B8%AD%E7%9A%84%E4%BC%A0%E9%80%92/" data-id="ckywz5jam000jscpc29s8aj87" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/08/09/Ginkgo&Gomega/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Ginkgo&amp;Gomega
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/07/21/Gorm_v2/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">GORM v2的使用</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

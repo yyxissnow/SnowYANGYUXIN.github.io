@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Ginkgo&amp;Gomega | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="使用的测试框架Ginkgo和对应的断言匹配库Gomega可以更好写好单元测试和集成测试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ginkgo&amp;Gomega">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/08/09/Ginkgo&Gomega/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="使用的测试框架Ginkgo和对应的断言匹配库Gomega可以更好写好单元测试和集成测试">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-08-09T09:43:36.000Z">
+<meta property="article:modified_time" content="2021-08-09T09:43:36.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta property="article:tag" content="test">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Ginkgo&amp;Gomega" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/08/09/Ginkgo&Gomega/" class="article-date">
+  <time datetime="2021-08-09T09:43:36.000Z" itemprop="datePublished">2021-08-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Ginkgo&amp;Gomega
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近公司项目实现标准化，打算给项目加上单元测试和集成测试，在Go的项目中由调研后打算采用<code>Ginkgo</code>和<code>Gomega</code>，看了下官方文档和github上的测试后写下点心得</p>
+<p><code>Ginkgo</code>是Go语言的一个行为驱动开发(BDD)风格的<strong>测试框架</strong>，通常和Gomega一起使用</p>
+<p><code>Gomega</code>是一个<strong>匹配/断言库</strong>，通常与Ginkgo测试框架搭配使用</p>
+<p><a target="_blank" rel="noopener" href="https://ke-chain.github.io/ginkgodoc/">Ginkgo官方中文文档</a></p>
+<p><a target="_blank" rel="noopener" href="https://onsi.github.io/gomega/">Gomega官方文档</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.gmem.cc/ginkgo-study-note">Ginkgo使用笔记</a></p>
+<p>下面的文章对上面的文档进行了参考和引用</p>
+<p>对于测试的方法和使用请参考具体的文档，本文章主要介绍实战的使用</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>安装Ginkgo</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">go get -u github.com/onsi/ginkgo/ginkgo<br></code></pre></td></tr></table></figure>
+
+<p>安装Gomega</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">go get github.com/onsi/gomega/...<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h1><p><code>Ginkgo</code>与Go自带测试挂钩，允许使用<code>go test</code>运行<code>Ginkgo</code>套件</p>
+<blockquote>
+<p>创建套件</p>
+</blockquote>
+<p>如果要为一个包编写<code>Ginkgo</code>测试，首先需要使用命令创建套件</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">cd</span> pkg/book <span class="hljs-comment">#假设要为book包编写测试</span><br>ginkgo bootstrap<br></code></pre></td></tr></table></figure>
+
+<p>上诉命令会生成文件：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> books_test<br> <br><span class="hljs-keyword">import</span> (<br>    <span class="hljs-comment">// 使用点号导入，把这两个包导入到当前命名空间</span><br>    . <span class="hljs-string">&quot;github.com/onsi/ginkgo&quot;</span><br>    . <span class="hljs-string">&quot;github.com/onsi/gomega&quot;</span><br>    <span class="hljs-string">&quot;testing&quot;</span><br>)<br> <br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">TestBooks</span><span class="hljs-params">(t *testing.T)</span></span> &#123;<br>    <span class="hljs-comment">// 将Ginkgo的Fail函数传递给Gomega，Fail函数用于标记测试失败，这是Ginkgo和Gomega唯一的交互点</span><br>    <span class="hljs-comment">// 如果Gomega断言失败，就会调用Fail进行处理</span><br>    RegisterFailHandler(Fail)<br> <br>    <span class="hljs-comment">// 启动测试套件</span><br>    RunSpecs(t, <span class="hljs-string">&quot;Books Suite&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>创建完成后就可以在当前包下使用<code>ginkgo</code>或者<code>go test</code>执行测试套件</p>
+<p>​    </p>
+<blockquote>
+<p>添加Spec</p>
+</blockquote>
+<p>上面的空测试套件没有什么价值，我们需要在此套接下编写测试（Spec）。虽然可以在<code>books_suite_test.go</code>中编写测试，但是推荐分离到独立的文件中，特别是包中有多个需要被测试的源文件的情况下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">ginkgo generate book #执行该命令可以生成源文件为book.go的测试<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> _ = Describe(<span class="hljs-string">&quot;Book&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br><br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Describe</code>块用来组织<code>Specs</code>，其中可以包含任意数量的</li>
+<li><code>It</code>：可以在<code>Describe</code>、<code>Context</code>这两种容器块内编写<code>Spec</code>，每个<code>Spec</code>写在<code>It</code>块中；为了贴合自然语言，可以使用<code>It</code>的别名<code>Specify</code></li>
+<li>使用<code>Describe</code>和<code>Context</code>来标识组织代码的具体行为</li>
+<li><code>BeforeEach</code>：在<code>Spec</code>（It块）运行之前执行，嵌套<code>Describe</code>时最外层<code>BeforeEach</code>先执行</li>
+<li><code>AfterEach</code>：在<code>Spec</code>运行之后执行，嵌套<code>Describe</code>时最内层<code>AfterEach</code>先执行</li>
+<li><code>JustBeforeEach</code>：在<code>It</code>块，所有<code>BeforeEach</code>之后执行，在<code>It</code>之前运行</li>
+</ul>
+<h1 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h1><p>现在要对网页后端的多个API接口进行集成测试</p>
+<blockquote>
+<p>初步</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> _ = Describe(<span class="hljs-string">&quot;Endpoint&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>	<span class="hljs-keyword">var</span> (<br>		reqJSON <span class="hljs-keyword">string</span><br>		res     *http.Response<br>		req     *http.Request<br>		client  *http.Client<br>		url     <span class="hljs-keyword">string</span><br>		method  <span class="hljs-keyword">string</span><br>		err     error<br>	)<br><br>	BeforeEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		client = &amp;http.Client&#123;&#125;<br>		res = &amp;http.Response&#123;&#125;<br>		req = &amp;http.Request&#123;&#125;<br>	&#125;)<br><br>	Context(<span class="hljs-string">&quot;test test1&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		BeforeEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			url = <span class="hljs-string">&quot;http://127.0.0.1:8080/test1&quot;</span><br>			method = <span class="hljs-string">&quot;GET&quot;</span><br>			req, err = http.NewRequest(method, url, strings.NewReader(reqJSON))<br>			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br><br>			req.Header.Add(<span class="hljs-string">&quot;xxx&quot;</span>, <span class="hljs-string">&quot;xxx&quot;</span>)<br>			req.Header.Add(<span class="hljs-string">&quot;xxx&quot;</span>, <span class="hljs-string">&quot;xxx&quot;</span>)<br><br>			res, err = client.Do(req)<br>			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br>		&#125;)<br>		<span class="hljs-comment">//直接对比res的status_code，简便</span><br>		It(<span class="hljs-string">&quot;test1 success&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			gomega.Expect(res.StatusCode).Should(gomega.Equal(http.StatusOK))<br>		&#125;)<br><br>	&#125;)<br><br>	Context(<span class="hljs-string">&quot;test test2&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		BeforeEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			url = <span class="hljs-string">&quot;http://127.0.0.1:8080/test2/1&quot;</span><br>			method = <span class="hljs-string">&quot;GET&quot;</span><br>			req, err = http.NewRequest(method, url, strings.NewReader(reqJSON))<br>			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br><br>			req.Header.Add(<span class="hljs-string">&quot;xxx&quot;</span>, <span class="hljs-string">&quot;xxx&quot;</span>)<br><br>			res, err = client.Do(req)<br>			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br>		&#125;)<br>		<span class="hljs-comment">//实现接口后可以自定义匹配规则，匹配方式灵活，并且可以打印自定义错误消息</span><br>		It(<span class="hljs-string">&quot;test2 success&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			gomega.Expect(res).To(test.RepresentJSONObject(http.StatusOK))<br>		&#125;)<br><br>	&#125;)<br><br>	Context(<span class="hljs-string">&quot;test test3&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		BeforeEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			url = <span class="hljs-string">&quot;http://127.0.0.1:8080/test3/1&quot;</span><br>			method = <span class="hljs-string">&quot;PUT&quot;</span><br>			reqJSON = <span class="hljs-string">&quot;&#123;\&quot;id\&quot;:1&#125;&quot;</span><br>			req, err = http.NewRequest(method, url, strings.NewReader(reqJSON))<br>			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br><br>			req.Header.Add(<span class="hljs-string">&quot;xxx&quot;</span>, <span class="hljs-string">&quot;xxx&quot;</span>)<br>			req.Header.Add(<span class="hljs-string">&quot;Content-Type&quot;</span>, <span class="hljs-string">&quot;application/json&quot;</span>)<br><br>			res, err = client.Do(req)<br>			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br>		&#125;)<br>		<span class="hljs-comment">//通过自定义匹配规则返回的err判定</span><br>		It(<span class="hljs-string">&quot;test3 success&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			_, err := test.RepresentJSONObject(http.StatusOK).Match(res)<br>			gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br>		&#125;)<br>		<span class="hljs-comment">//通过自定义匹配规则返回的true判定，只答应ture和false的消息</span><br>		It(<span class="hljs-string">&quot;test3 no err&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			gomega.Expect(test.RepresentJSONObject(http.StatusOK).Match(res)).Should(gomega.Equal(<span class="hljs-literal">true</span>))<br>		&#125;)<br>	&#125;)<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>上诉的思想就是<strong>每个测试组件都提前定义好<code>request</code>和<code>response</code>，通过发送给<code>client</code>的<code>request</code>加上<code>Gomega</code>断言收到的response来进行测试</strong></li>
+<li>把每个测试组件都要使用的变脸，如<code>url、method、client</code>等放最初的全局变量</li>
+<li>每次使用前都要重新初始化<code>client</code>、<code>request</code>、<code>response</code>则放入<code>BeforeEach</code>（如果使用了<code>response.Body</code>）可以使用<code>AfterEach</code>进行关闭</li>
+</ul>
+<p>​    </p>
+<p><strong>对上面不同的Gomega断言类型进行说明</strong></p>
+<ul>
+<li><p><code>gomega.Expect(res.StatusCode).Should(gomega.Equal(http.StatusOK))</code></p>
+<p><code>Should</code>和<code>To</code>相同，表示肯定，<code>gomega.Equal</code>则是表示断言相等，连起来就是我们实际得到的<code>res.StatusCode</code>应该和<code>http.StatusOK</code>相同，相同测试成功，不同测试失败</p>
+</li>
+<li><p><code>gomega.Expect(err).ShouldNot(gomega.HaveOccurred())</code></p>
+<p><code>ShouldNot</code>和<code>NotTo</code>相同，表示否定，<code>gomega.HaveOccurred()</code>指示<code>non-nill</code>的<code>error</code>则成功，连起来就是如果出现<code>non-nil</code>的<code>error</code>就测试失败，<code>error</code>为<code>nil</code>则测试成功，则是<strong>非常典型的Go错误测试模式</strong></p>
+</li>
+<li><p><code>gomega.Expect(res).To(test.RepresentJSONObject(http.StatusOK))</code></p>
+<p>自定义匹配规则，只要<strong>实现<code>Match</code>、<code>FailureMessage</code>、<code>NegatedFailureMessage</code>方法的接口</strong>就行，好处就是<strong>匹配规则灵活多变</strong>(传入的http.StatusOK作为expected去Match Expect中的 res)，匹配结果返回的是<code>false</code>和<code>non-err</code>则为测试失败</p>
+</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">RepresentJSONObject</span><span class="hljs-params">(expected <span class="hljs-keyword">interface</span>&#123;&#125;)</span> <span class="hljs-title">types</span>.<span class="hljs-title">GomegaMatcher</span></span> &#123;<br>   <span class="hljs-keyword">return</span> &amp;representJSONMatcher&#123;<br>      expected: expected,<br>   &#125;<br>&#125;<br><br><span class="hljs-keyword">type</span> representJSONMatcher <span class="hljs-keyword">struct</span> &#123;<br>   expected <span class="hljs-keyword">interface</span>&#123;&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(matcher *representJSONMatcher)</span> <span class="hljs-title">Match</span><span class="hljs-params">(actual <span class="hljs-keyword">interface</span>&#123;&#125;)</span> <span class="hljs-params">(success <span class="hljs-keyword">bool</span>, err error)</span></span> &#123;<br>   response, ok := actual.(*http.Response)<br>   <span class="hljs-keyword">if</span> !ok &#123;<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>, fmt.Errorf(<span class="hljs-string">&quot;RepresentJSONObject matcher expects an http.Response&quot;</span>)<br>   &#125;<br><br>   <span class="hljs-keyword">if</span> !reflect.DeepEqual(matcher.expected.(<span class="hljs-keyword">int</span>), response.StatusCode) &#123;<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>, fmt.Errorf(<span class="hljs-string">&quot;actual and expect no equal ,expect is %d,actual is %d&quot;</span>, matcher.expected.(<span class="hljs-keyword">int</span>), response.StatusCode)<br>   &#125;<br>   <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>, <span class="hljs-literal">nil</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(matcher *representJSONMatcher)</span> <span class="hljs-title">FailureMessage</span><span class="hljs-params">(actual <span class="hljs-keyword">interface</span>&#123;&#125;)</span> <span class="hljs-params">(message <span class="hljs-keyword">string</span>)</span></span> &#123;<br>   <span class="hljs-keyword">return</span> fmt.Sprintf(<span class="hljs-string">&quot;Expected\n\t%#v\nto contain the JSON representation of\n\t%#v&quot;</span>, actual, matcher.expected)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(matcher *representJSONMatcher)</span> <span class="hljs-title">NegatedFailureMessage</span><span class="hljs-params">(actual <span class="hljs-keyword">interface</span>&#123;&#125;)</span> <span class="hljs-params">(message <span class="hljs-keyword">string</span>)</span></span> &#123;<br>   <span class="hljs-keyword">return</span> fmt.Sprintf(<span class="hljs-string">&quot;Expected\n\t%#v\nnot to contain the JSON representation of\n\t%#v&quot;</span>, actual, matcher.expected)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>改进</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> _ = Describe(<span class="hljs-string">&quot;Endpoint&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br><br>   JustAfterEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>      warpper.InitTCli()<br>   &#125;)<br><br>   Context(<span class="hljs-string">&quot;test test1&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>      BeforeEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>         err := warpper.TCli.Do(<span class="hljs-string">&quot;GET&quot;</span>, <span class="hljs-string">&quot;/test1&quot;</span>, <span class="hljs-string">&quot;&quot;</span>)<br>         gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br>      &#125;)<br><br>      It(<span class="hljs-string">&quot;test1 success&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>         gomega.Expect(warpper.TCli.Res).To(warpper.RepresentJSONObject(http.StatusOK))<br>      &#125;)<br><br>   &#125;)<br><br>   Context(<span class="hljs-string">&quot;test test2&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>      BeforeEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>         err := warpper.TCli.Do(<span class="hljs-string">&quot;GET&quot;</span>, <span class="hljs-string">&quot;/test/1&quot;</span>, <span class="hljs-string">&quot;&quot;</span>)<br>         gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br>      &#125;)<br><br>      It(<span class="hljs-string">&quot;test2 success&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>         gomega.Expect(warpper.TCli.Res).To(warpper.RepresentJSONObject(http.StatusOK))<br>      &#125;)<br><br>   &#125;)<br><br>   Context(<span class="hljs-string">&quot;update endpoint&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>      BeforeEach(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>         reqJSON := <span class="hljs-string">&quot;&#123;\&quot;id\&quot;:1&#125;&quot;</span><br>         err := warpper.TCli.Do(<span class="hljs-string">&quot;PUT&quot;</span>, <span class="hljs-string">&quot;/test3/1&quot;</span>, reqJSON)<br>         gomega.Expect(err).ShouldNot(gomega.HaveOccurred())<br>      &#125;)<br>      It(<span class="hljs-string">&quot;update endpoint success&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>         gomega.Expect(warpper.TCli.Res).To(warpper.RepresentJSONObject(http.StatusOK))<br>      &#125;)<br>   &#125;)<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> TeClient <span class="hljs-keyword">struct</span> &#123;<br>   Res    *http.Response<br>   Req    *http.Request<br>   Client *http.Client<br>   Err    error<br>&#125;<br><br><span class="hljs-keyword">var</span> TCli *TeClient<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InitTCli</span><span class="hljs-params">()</span></span> &#123;<br>   TCli = &amp;TeClient&#123;<br>      Res:    &amp;http.Response&#123;&#125;,<br>      Req:    &amp;http.Request&#123;&#125;,<br>      Client: &amp;http.Client&#123;&#125;,<br>      Err:    <span class="hljs-literal">nil</span>,<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>采用自定义封装匹配规则和<code>gomega.HaveOccurred()</code>错误断言</p>
+</li>
+<li><p>对变量定义和初始化进行封装，因为每次在调用后都要重新初始化<code>TCli</code>，所以采用创建套件时初始化<code>TCli</code>和每次<code>It</code>结束后初始化的方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//在ginkgo bootstrap创建套件的文件中，表示启动测试套件的每一个总Describe运行前都要执行的代码</span><br><span class="hljs-keyword">var</span> _ = BeforeSuite(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>   warpper.InitTCli()<br>&#125;)<br></code></pre></td></tr></table></figure></li>
+<li><p>对<code>BeforeEach</code>中<code>client</code>发送<code>request</code>和接收<code>response</code>的代码进行封装</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(t *TeClient)</span> <span class="hljs-title">Do</span><span class="hljs-params">(method, url, reqJson <span class="hljs-keyword">string</span>)</span> <span class="hljs-title">error</span></span> &#123;<br>   adr := <span class="hljs-string">&quot;http://&quot;</span> + ip + url<br>   t.Req, t.Err = http.NewRequest(method, adr, strings.NewReader(reqJson))<br>   t.Req.Header.Add(<span class="hljs-string">&quot;xxx&quot;</span>, <span class="hljs-string">&quot;xxx&quot;</span>)<br>   t.Req.Header.Add(<span class="hljs-string">&quot;xxx&quot;</span>, <span class="hljs-string">&quot;xxx&quot;</span>)<br>   <span class="hljs-keyword">if</span> reqJson != <span class="hljs-string">&quot;&quot;</span> &#123;<br>      t.Req.Header.Add(<span class="hljs-string">&quot;Content-Type&quot;</span>, <span class="hljs-string">&quot;application/json&quot;</span>)<br>   &#125;<br><br>   t.Res, t.Err = t.Client.Do(t.Req)<br>   <span class="hljs-keyword">if</span> t.Err != <span class="hljs-literal">nil</span> &#123;<br>      err := t.Err<br>      <span class="hljs-keyword">return</span> err<br>   &#125;<br>   <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>把测试组件相同的代码抽出成函数调用的方式，这样测试组件中的代码简介明了</p>
+</li>
+<li><p><code>Header.Add(“xxx”,&quot;xxx&quot;)</code>一般都是<code>token</code>、安全验证，因为在测试中使用的身份是一样的</p>
+</li>
+<li><p>对于有传如<code>request.Body</code>的<code>POST</code>方法才加<code>Header.Add(&quot;Content-Type&quot;, &quot;application/json&quot;)</code>，<code>GET</code>中不需要传入<code>request.Body</code>就不需要了</p>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/08/09/Ginkgo&Gomega/" data-id="ckywz5jah0002scpc7g4z66sh" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/test/" rel="tag">test</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/09/03/Goroutine%E4%BD%BF%E7%94%A8%E5%87%86%E5%88%99/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Goroutine使用准则
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/07/29/Go%E5%88%87%E7%89%87%E5%9C%A8%E5%87%BD%E6%95%B0%E4%B8%AD%E7%9A%84%E4%BC%A0%E9%80%92/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go切片在函数中的传递</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

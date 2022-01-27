@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go安装和使用Redis | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Go中使用Docker安装Redis，使用评论功能对Redis的操作进行演示">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go安装和使用Redis">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/09/03/Go_Redis/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="Go中使用Docker安装Redis，使用评论功能对Redis的操作进行演示">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-09-03T11:17:26.000Z">
+<meta property="article:modified_time" content="2021-09-03T11:17:26.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta property="article:tag" content="星辰缘">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Go_Redis" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/09/03/Go_Redis/" class="article-date">
+  <time datetime="2021-09-03T11:17:26.000Z" itemprop="datePublished">2021-09-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go安装和使用Redis
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Docker-安装-Redis"><a href="#Docker-安装-Redis" class="headerlink" title="Docker 安装 Redis"></a>Docker 安装 Redis</h1><blockquote>
+<p>创建data文件做数据持久化存储时</p>
+</blockquote>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mkdir /data/redis<br>mkdir /data/redis/data <br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>做redis容器启动后的配置文件</p>
+</blockquote>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">touch /data/redis/redis.conf<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs plaintext"># Redis默认不是以守护进程的方式运行<br>daemonize no<br><br># 指定Redis监听端口，默认端口为6379<br>port 6379<br><br># 绑定的主机地址，不要绑定容器的本地127.0.0.1地址，因为这样就无法在容器外部访问<br>bind 0.0.0.0<br><br># 持久化<br>appendonly yes<br><br>#设置密码<br>requirepass password  <br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>启动命令</p>
+</blockquote>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker run -p 6379:6379 --name redis -v /docker/redis/redis.conf:/etc/redis/redis.conf -v /docker/redis/data:/data -d redis redis-server /etc/redis/redis.conf<br></code></pre></td></tr></table></figure>
+
+<p><strong>命令解释</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run redis # 从redis镜像运行容器<br>-p 6379:6379 # 映射本地6379端口到容器6379端口，前为本地端口<br>--name redis # 设置容器名称为redis，方便以后使用docker ps进行管理<br>-v /data/redis/redis.conf:/etc/redis/redis.conf # 关联本地/data/redis/redis.conf文件到容器中/etc/redis/redis.conf，同样，前为本地<br>-v /data/redis/data:/data # 关联本地/docker/redis/data到容器内/data目录，此为存放redis数据的目录，为方便以后升级redis，而数据可以留存<br>-d # 后台启动，使用此方式启动，则redis.conf中daemonize必须设置为no，否则会无法启动<br>redis-server /etc/redis/redis.conf # 在容器内启动redis-server的命令，主要是为了加载配置<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="Go-中使用-Redis"><a href="#Go-中使用-Redis" class="headerlink" title="Go 中使用 Redis"></a>Go 中使用 Redis</h1><blockquote>
+<p>安装 go-redis v8</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">go get github.com/go-redis/redis/v8  <br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>初始化 redis client</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> rdb *redis.Client<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InitRedisClii</span><span class="hljs-params">(cfg config.RedisConf)</span> <span class="hljs-title">error</span></span> &#123;<br>   rdb = redis.NewClient(&amp;redis.Options&#123;<br>      Addr:     cfg.Address, <br>      Password: cfg.Password, <span class="hljs-comment">//设置好的密码</span><br>      DB:       <span class="hljs-number">0</span>, <span class="hljs-comment">//要连接的redis库</span><br>      PoolSize: <span class="hljs-number">100</span>, <span class="hljs-comment">//连接池的最大连接数</span><br>   &#125;)<br><br>   ctx, cancel := context.WithTimeout(context.Background(), <span class="hljs-number">5</span>*time.Second)<br>   <span class="hljs-keyword">defer</span> cancel()<br>   _, err := rdb.Ping(ctx).Result() <span class="hljs-comment">//检测心跳，确认是否能连接上</span><br>   <span class="hljs-keyword">return</span> err<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GetRedisCli</span><span class="hljs-params">()</span> *<span class="hljs-title">redis</span>.<span class="hljs-title">Client</span></span> &#123; <br>   <span class="hljs-keyword">return</span> rdb<br>&#125;  <br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>使用 redis</p>
+</blockquote>
+<p>本次以查询评论功能为例</p>
+<p>使用的rpc的调用方式，属于所写的星辰缘项目，是一个微服务架构的项目，在后续中也会逐步完善相关笔记</p>
+<ul>
+<li><p>在使用redis之前要思考为什么使用redis，在什么地方使用redis</p>
+</li>
+<li><p>此次是在查询文章评论功能上使用redis文章评论使用，将db查询结果进行json序列化作为value存入redis（不严谨，目前初始学，暂时先这样），并且设置时间为5s</p>
+</li>
+<li><p>这样每次查就会先去redis中查找是否有相关信息，没有的话再去mysql中找，并且将结果再存入到redis中且设置存活时间为5s</p>
+</li>
+<li><p>这样用户每次新写了评论后可能会5s中后才能看到自己写的评论（不严谨，现在暂时逻辑先这样），虽然<u><strong>造成了延迟，牺牲了及时性</strong></u>，但是却有效<u><strong>保护了mysql</strong></u></p>
+</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(h *CommentServer)</span> <span class="hljs-title">QueryComment</span><span class="hljs-params">(ctx context.Context, req *comment.QueryCommentREQ, rsp *comment.QueryCommentRSP)</span> <span class="hljs-title">error</span></span> &#123;<br>   <span class="hljs-keyword">var</span> comments []model.Comment<br>   <span class="hljs-keyword">var</span> ack []*comment.CommentContent<br>   info, err := redisCli.GetRedisCli().Get(ctx, <span class="hljs-string">&quot;comment_id_&quot;</span>+strconv.Itoa(<span class="hljs-keyword">int</span>(req.CommentId))).Bytes() <span class="hljs-comment">//先redis中找数据</span><br>   <span class="hljs-keyword">if</span> err == <span class="hljs-literal">nil</span> &#123; <span class="hljs-comment">//找到了redis中的数据</span><br>      fmt.Println(<span class="hljs-string">&quot;use redis!&quot;</span>)<br>      err = json.Unmarshal(info, &amp;ack) <span class="hljs-comment">//反序列化</span><br>      rsp.Code = <span class="hljs-keyword">uint32</span>(common.StatusRPCOK)<br>      rsp.Comment = ack<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>   &#125;<br>   err = db.QueryComment(req.CommentId, req.Type, &amp;comments) <span class="hljs-comment">//没有找到就去mysql中查询</span><br>   <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>      rsp.Code = <span class="hljs-keyword">uint32</span>(common.ErrRPCCode)<br>      rsp.Err = err.Error()<br>      <span class="hljs-keyword">return</span> errors.Wrap(err, <span class="hljs-string">&quot;db query comment err&quot;</span>)<br>   &#125;<br>   <span class="hljs-keyword">for</span> _, v := <span class="hljs-keyword">range</span> comments &#123;<br>      <span class="hljs-comment">//<span class="hljs-doctag">TODO:</span>微服务调微服务优化</span><br>      rspUser, err := client.GetIDUser(v.UserID) <span class="hljs-comment">//去account 微服务中查询user_id的具体信息</span><br>      <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>         rsp.Code = <span class="hljs-keyword">uint32</span>(common.ErrRPCCode)<br>         rsp.Err = err.Error()<br>         <span class="hljs-keyword">return</span> errors.Wrap(err, <span class="hljs-string">&quot;db get id user err&quot;</span>)<br>      &#125;<br>      ack = <span class="hljs-built_in">append</span>(ack, &amp;comment.CommentContent&#123;<br>         Id:         v.ID,<br>         CommentId:  v.CommentedID,<br>         Type:       <span class="hljs-keyword">uint32</span>(v.Type),<br>         Content:    v.Content,<br>         Time:       v.Time,<br>         UserId:     v.UserID,<br>         UserAvatar: oss.DownloadUrl(rspUser.Avatar),<br>         UserName:   rspUser.Name,<br>         Love:       <span class="hljs-keyword">int64</span>(v.Love),<br>      &#125;)<br>   &#125;<br>   fmt.Println(<span class="hljs-string">&quot;user mysql!&quot;</span>)<br>   rsp.Code = <span class="hljs-keyword">uint32</span>(common.StatusRPCOK)<br>   rsp.Comment = ack<br>   data, _ := json.Marshal(ack) <span class="hljs-comment">//将查询结果序列化</span><br>    <span class="hljs-comment">//将查询结果存入redis，并设置存活时间为5s</span><br>   err = redisCli.GetRedisCli().Set(ctx, <span class="hljs-string">&quot;comment_id_&quot;</span>+strconv.Itoa(<span class="hljs-keyword">int</span>(req.CommentId)), <span class="hljs-keyword">string</span>(data), time.Second*<span class="hljs-number">5</span>).Err()<br>   <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>      rsp.Err = <span class="hljs-string">&quot;redis add comment err&quot;</span><br>   &#125;<br>   <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="贴士"><a href="#贴士" class="headerlink" title="贴士"></a>贴士</h1><p><strong>go-redis中如果Get一个不存在的键会直接返回err</strong>，而不是空字符串</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/09/03/Go_Redis/" data-id="ckywz5jaj0005scpcff2xe1oe" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/09/10/Go%E5%AE%9E%E7%8E%B0%E9%98%B2%E9%87%8D%E6%94%BE%E6%94%BB%E5%87%BB/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Go实现防重放攻击
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/09/03/Goroutine%E4%BD%BF%E7%94%A8%E5%87%86%E5%88%99/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Goroutine使用准则</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

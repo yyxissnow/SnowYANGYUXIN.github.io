@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go调用K8S | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="使用Go创建k8s的客户端和k8s API server进行交互是非常简便的，本文将进行简要的讲解">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go调用K8S">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/09/26/Go_k8s/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="使用Go创建k8s的客户端和k8s API server进行交互是非常简便的，本文将进行简要的讲解">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-09-26T08:55:58.000Z">
+<meta property="article:modified_time" content="2021-09-26T08:55:58.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Go_k8s" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/09/26/Go_k8s/" class="article-date">
+  <time datetime="2021-09-26T08:55:58.000Z" itemprop="datePublished">2021-09-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go调用K8S
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>使用Go创建k8s的客户端和k8s API server进行交互是非常简便的，本文将进行简要的讲解</p>
+<h1 id="拉取依赖"><a href="#拉取依赖" class="headerlink" title="拉取依赖"></a>拉取依赖</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">go get k8s.io/client-go@v0.18.11-rc.0<br>go get k8s.io/api@v0.18.11-rc.0<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="创建客户端"><a href="#创建客户端" class="headerlink" title="创建客户端"></a>创建客户端</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">const</span> (<br>   server = <span class="hljs-string">&quot;https://127.0.0.1:8080&quot;</span><br>   token  = <span class="hljs-string">&quot;xxxx&quot;</span><br>)<br><span class="hljs-keyword">var</span>(<br>	Client *kubernetes.Clientset<br>)<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InitK8sClient</span><span class="hljs-params">()</span> *<span class="hljs-title">kubernetes</span>.<span class="hljs-title">Clientset</span></span> &#123;<br>   tokenBytes, err := base64.StdEncoding.DecodeString(token) <span class="hljs-comment">// 解析token</span><br>   <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>      <span class="hljs-built_in">panic</span>(<span class="hljs-string">&quot;token 解析失败&quot;</span>)<br>   &#125;<br>   config := &amp;rest.Config&#123;<br>      BearerToken: <span class="hljs-keyword">string</span>(tokenBytes), <span class="hljs-comment">// k8s的token</span><br>      Host:        server, <span class="hljs-comment">// k8s的host</span><br>      TLSClientConfig: rest.TLSClientConfig&#123;<br>         Insecure: <span class="hljs-literal">true</span>,<br>      &#125;,<br>   &#125;<br>   <span class="hljs-comment">// 根据指定的 config 创建一个新的 clientSet</span><br>   clientSet, err := kubernetes.NewForConfig(config)<br>   <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>      <span class="hljs-built_in">panic</span>(err.Error())<br>   &#125;<br>   <span class="hljs-keyword">return</span> clientSet<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="获取deployment"><a href="#获取deployment" class="headerlink" title="获取deployment"></a>获取deployment</h1><h2 id="使用API获取deployment"><a href="#使用API获取deployment" class="headerlink" title="使用API获取deployment"></a>使用API获取deployment</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 获取deployment</span><br><span class="hljs-comment">// 指定namespace为test_namespace</span><br>deployments, err := Client.AppsV1().Deployments(<span class="hljs-string">&quot;test_namespace&quot;</span>).List(context.TODO(), meta_v1.ListOptions&#123;&#125;)<br><span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>   <span class="hljs-built_in">panic</span>(err)<br>&#125;<br><span class="hljs-keyword">for</span> _, v := <span class="hljs-keyword">range</span> deployments.Items &#123;<br>   fmt.Println(v.Name)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="使用informer获取deployment"><a href="#使用informer获取deployment" class="headerlink" title="使用informer获取deployment"></a>使用informer获取deployment</h2><p><strong>informer</strong></p>
+<blockquote>
+<p><strong>为什么使用informer？</strong></p>
+</blockquote>
+<p>使用 Informer 实例的 Lister() 方法， List/Get Kubernetes 中的 Object 时，<strong>Informer 不会去请求 Kubernetes API，而是直接查找缓存在本地内存中的数据(这份数据由 Informer 自己维护)<strong>。通过这种方式，</strong>Informer 既可以更快地返回结果，又能减少对 Kubernetes API 的直接调用</strong>。</p>
+<p>​    </p>
+<blockquote>
+<p><strong>informer的机制</strong></p>
+</blockquote>
+<p>Informer 只会调用 Kubernetes List 和 Watch 两种类型的 API。Informer 在初始化的时，<strong>先调用 Kubernetes List API 获得某种 resource 的全部 Object，缓存在内存中</strong>; 然后，调用 Watch API 去 watch 这种 resource，去维护这份缓存; 最后，Informer 就不再调用 Kubernetes 的任何 API。</p>
+<p>​    </p>
+<blockquote>
+<p><strong>可监听并触发回调函数</strong></p>
+</blockquote>
+<p>Informer 通过 Kubernetes Watch API 监听某种 resource 下的所有事件。而且，Informer 可以添加自定义的<strong>回调函数</strong>，这个回调函数实例(即 <code>ResourceEventHandler</code> 实例)只需实现 <code>OnAdd(obj interface&#123;&#125;)</code>、<code>OnUpdate(oldObj, newObj interface&#123;&#125;)</code>和 <code>OnDelete(obj interface&#123;&#125;)</code> 三个方法，这三个方法分别对应 informer 监听到创建、更新和删除这三种事件类型。</p>
+<p>​    </p>
+<blockquote>
+<p><strong>二级缓存</strong></p>
+</blockquote>
+<p>二级缓存属于 Informer 的底层缓存机制，这两级缓存分别是 <strong>DeltaFIFO</strong> 和 <strong>LocalStore</strong>。</p>
+<p>Delta代表变化， FIFO则是先入先出的队列。DeltaFIFO将接受来的资源event，转化为特定的变化类型，存储在队列中，周期性的POP出去，分发到事件处理器，并更新Indexer中的本地缓存</p>
+<p>这两级缓存的用途各不相同。DeltaFIFO 用来存储 Watch API 返回的各种事件 ，LocalStore 只会被 Lister 的 List/Get 方法访问 。</p>
+<p>虽然 Informer 和 Kubernetes 之间没有 resync 机制，但 Informer 内部的这两级缓存之间存在 resync 机制。</p>
+<p>​    </p>
+<blockquote>
+<p><strong>详细参考资料</strong></p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.kubernetes.org.cn/2693.html">informer详解1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/yangyuliufeng/p/13611126.html">informer详解2</a></p>
+<p>​    </p>
+<p><strong>goalng中使用</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> DeploymentInformer cache.SharedIndexInformer<br><br>stop := <span class="hljs-built_in">make</span>(<span class="hljs-keyword">chan</span> <span class="hljs-keyword">struct</span>&#123;&#125;)<br><span class="hljs-comment">//创建factory，第一个参数是与k8s-api-server交互的客户端，第二个参数用于设置多久进行一次resync(周期性的List操作)</span><br>factory := informers.NewSharedInformerFactoryWithOptions(Client, time.Second*<span class="hljs-number">10</span>) <br>DeploymentInformer = factory.Apps().V1().Deployments().Informer() <span class="hljs-comment">// 创建deployment的informer</span><br><br><span class="hljs-comment">//通过informer.Run(stop)运行该informer，它是一个持久化的goroutine，通过client对象与k8s-api-server交互。</span><br><span class="hljs-comment">//chan_stop用于在程序进程退出前通知Informer退出</span><br><span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>	DeploymentInformer.Run(stop) <br>&#125;()<br><br><span class="hljs-comment">//需要先运行informer监听后才能获取列表</span><br>list := DeploymentInformer.GetStore().List()<br><span class="hljs-keyword">for</span> _, v := <span class="hljs-keyword">range</span> list &#123;<br>	deployment := v.(*apps_v1.Deployment)<br>	fmt.Println(deployment.Name)<br>&#125;<br><span class="hljs-keyword">select</span> &#123;&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="创建deployment"><a href="#创建deployment" class="headerlink" title="创建deployment"></a>创建deployment</h1><p>说明</p>
+<blockquote>
+<p>label</p>
+</blockquote>
+<p>Label是Kubernetes系列中另外一个核心概念。是一组绑定到K8s资源对象上的key/value对。同一个对象的labels属性的key必须唯一。label可以附加到各种资源对象上，如Node,Pod,Service,RC等。</p>
+<p>通过给指定的资源对象捆绑一个或多个不用的label来实现<strong>多维度的资源分组管理功能</strong>，以便于灵活，<strong>方便地进行资源分配，调度，配置，部署等管理工作</strong>。</p>
+<p>示例如下：　</p>
+<ul>
+<li>版本标签：”release” : “stable” , “release” : “canary”…</li>
+<li>环境标签：”environment” : “dev” , “environment” : “production”</li>
+<li>架构标签：”tier” : “frontend” , “tier” : “backend” , “tier” : “middleware”</li>
+<li>分区标签：”partition” : “customerA” , “partition” : “customerB”…</li>
+<li>质量管控标签：”track” : “daily” , “track” : “weekly”</li>
+</ul>
+<p>​    </p>
+<blockquote>
+<p>namespace</p>
+</blockquote>
+<p>​       namespaces是kubernetes集群中的虚拟化集群。在一个Kubernetes集群中可以拥有多个命名空间，<strong>它们在逻辑上彼此隔离</strong>。 他们可以为个人和团队提供组织，安全甚至性能方面的帮助。</p>
+<p>​        命名空间适用于存在很多跨多个团队或项目的用户的场景。对于只有几到几十个用户的集群，根本不需要创建或考虑命名空间。当需要名称空间提供的功能时，请开始使用它们。<br> 命名空间为名称提供了一个范围。资源的名称需要在命名空间内是唯一的，但不能跨命名空间。命名空间不能相互嵌套，<strong>每个 Kubernetes 资源只能在一个命名空间中</strong>。<br>​        命名空间是在<strong>多个用户之间划分集群资源的一种方法</strong>（通过资源配额）。<br>​        在 Kubernetes 未来版本中，相同命名空间中的对象默认将具有相同的访问控制策略。<br>​        不需要使用多个命名空间来分隔轻微不同的资源，例如同一软件的不同版本：<strong>使用 labels来区分同一命名空间中的不同资源</strong>。</p>
+<p>​    </p>
+<blockquote>
+<p>selector</p>
+</blockquote>
+<p>K8S中的Service是一个抽象概念，它定义了一个服务的多个pod逻辑合集和访问pod的策略，一般把service称为微服务</p>
+<p><strong>举个例子：</strong>一个a服务运行3个pod，b服务怎么访问a服务的pod，pod的ip都不是持久化的<strong>重启之后就会有变化</strong>。<br>这时候b服务可以访问跟a服务绑定的service，service信息是固定的提前告诉b就行了，service通过Label Selector跟a服务的pod绑定,无论a的pod如何变化对b来说都是透明的。</p>
+<p>​    </p>
+<blockquote>
+<p>ImagePullPolicy</p>
+</blockquote>
+<ul>
+<li>Allow：总是拉取pull</li>
+<li>ifNotPresent：本地有镜像则优先使用本地</li>
+<li>Never：只是用本地镜像，从不拉取</li>
+</ul>
+<p><strong>代码内书写yaml进行创建</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><code class="hljs go"><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">CreateDeployment</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> &#123;<br>    <br>	deployment := &amp;apps_v1.Deployment&#123;<br>		ObjectMeta: meta_v1.ObjectMeta&#123;<br>			Name: <span class="hljs-string">&quot;xxx-name&quot;</span>,<br>		&#125;,<br>		Spec: apps_v1.DeploymentSpec&#123;<br>			Replicas: int32Ptr(<span class="hljs-number">2</span>),<br>			Selector: &amp;meta_v1.LabelSelector&#123;<br>				MatchLabels: <span class="hljs-keyword">map</span>[<span class="hljs-keyword">string</span>]<span class="hljs-keyword">string</span>&#123;<br>					<span class="hljs-string">&quot;app&quot;</span>: <span class="hljs-string">&quot;xxx-name&quot;</span>,<br>				&#125;,<br>			&#125;,<br>			Template: core_v1.PodTemplateSpec&#123;<br>				ObjectMeta: meta_v1.ObjectMeta&#123;<br>					Labels: <span class="hljs-keyword">map</span>[<span class="hljs-keyword">string</span>]<span class="hljs-keyword">string</span>&#123;<br>						<span class="hljs-string">&quot;app&quot;</span>: <span class="hljs-string">&quot;xxx-name&quot;</span>,<br>					&#125;,<br>				&#125;,<br>				Spec: core_v1.PodSpec&#123;<br>					Containers: []core_v1.Container&#123;<br>						&#123;<br>							Name:            <span class="hljs-string">&quot;test-a&quot;</span>,<br>							Image:           <span class="hljs-string">&quot;image_a:1.1.0&quot;</span>,<br>							ImagePullPolicy: <span class="hljs-string">&quot;IfNotPresent&quot;</span>,<br>							Ports: []core_v1.ContainerPort&#123;<br>								&#123;<br>									Name:          <span class="hljs-string">&quot;http&quot;</span>,<br>									Protocol:      core_v1.ProtocolTCP,<br>									ContainerPort: <span class="hljs-number">8080</span>,<br>								&#125;,<br>							&#125;,<br>						&#125;,<br>						&#123;<br>                            Name:            <span class="hljs-string">&quot;test-b&quot;</span>,<br>							Image:           <span class="hljs-string">&quot;image_b:1.1.0&quot;</span>,<br>							ImagePullPolicy: <span class="hljs-string">&quot;IfNotPresent&quot;</span>,<br>							Ports: []core_v1.ContainerPort&#123;<br>								&#123;<br>									Name:          <span class="hljs-string">&quot;http&quot;</span>,<br>									Protocol:      core_v1.ProtocolTCP,<br>									ContainerPort: <span class="hljs-number">8081</span>,<br>								&#125;,<br>							&#125;,<br>						&#125;,<br>					&#125;,<br>				&#125;,<br>			&#125;,<br>		&#125;,<br>	&#125;<br>    <span class="hljs-comment">// 创建deployment</span><br>    <span class="hljs-comment">// 指定namespace为test_namespace</span><br>	<span class="hljs-keyword">if</span> _, err := Client.AppsV1().Deployments(<span class="hljs-string">&quot;test_namespace&quot;</span>).Create(context.TODO(), deployment, meta_v1.CreateOptions&#123;&#125;); err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-keyword">return</span> err<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">int32Ptr</span><span class="hljs-params">(i <span class="hljs-keyword">int32</span>)</span> *<span class="hljs-title">int32</span></span> &#123;<br>	<span class="hljs-keyword">return</span> &amp;i<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="获取configmap"><a href="#获取configmap" class="headerlink" title="获取configmap"></a>获取configmap</h1><p>ConfigMap是一种API对象，用来将<strong>非加密数据</strong>保存到键值对中。可以用作环境变量、命令行参数或者存储卷中的配置文件。</p>
+<p>ConfigMap可以将环境变量<strong>配置信息和容器镜像解耦</strong>，便于应用配置的修改。如果需要存储加密信息时可以使用Secret对象</p>
+<p><a target="_blank" rel="noopener" href="https://liumiaocn.blog.csdn.net/article/details/103818799?utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~default-5.no_search_link&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~default-5.no_search_link">k8s中configmap的增删查改</a></p>
+<p>​    </p>
+<p><strong>golang中使用</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go">data, err := Client.CoreV1().ConfigMaps(<span class="hljs-string">&quot;namespace_name&quot;</span>).Get(context.TODO(), <span class="hljs-string">&quot;configmap_name&quot;</span>, meta_v1.GetOptions&#123;&#125;)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		fmt.Println(<span class="hljs-string">&quot;err:&quot;</span>, err)<br>		<span class="hljs-keyword">return</span><br>	&#125;<br><span class="hljs-keyword">for</span> key,value:=<span class="hljs-keyword">range</span> data.Data&#123;<br>	fmt.Println(key,<span class="hljs-string">&quot;:&quot;</span>,value)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/09/26/Go_k8s/" data-id="ckywz5jaj0009scpcd445bkmb" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/10/15/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Go逃逸分析
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/09/24/Go_copier%E5%BA%93/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go使用copier库</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

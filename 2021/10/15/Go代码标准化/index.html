@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go标准化 | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="项目代码注重标准化可以帮助我们写出高质量的代码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go标准化">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="项目代码注重标准化可以帮助我们写出高质量的代码">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-10-15T06:49:26.000Z">
+<meta property="article:modified_time" content="2021-10-15T06:49:26.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Go代码标准化" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/" class="article-date">
+  <time datetime="2021-10-15T06:49:26.000Z" itemprop="datePublished">2021-10-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go标准化
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近将公司的一个项目代码进行初步的标准化，在过程中也有一些感悟和收获，进行简要的记录</p>
+<p>项目代码注重标准化可以帮助我们写出高质量的代码</p>
+<h1 id="Go写法标准化"><a href="#Go写法标准化" class="headerlink" title="Go写法标准化"></a>Go写法标准化</h1><ul>
+<li><p>不要将<code>interface</code>做为万能的传递类型，不明确传递类型会降低代码的清晰度，<code>interface</code>类型可以代表任意类型，编译器不知道参数会是什么类型，只有运行时才知道，因此**只能分配到堆上(增加GC压力)**；并且如果接收方也是<code>interface</code>，则随意传递值会导致不可预估的后果(在twice中<code>db层</code>就用interface接收<code>control层</code>传的model是完全错误的)</p>
+</li>
+<li><p>变量和函数命名规范，要有意义，看名知意且尽量简介，驼峰命名，动作+对象，不要在函数里创建大写开头的变量</p>
+</li>
+</ul>
+<ul>
+<li><p>error返回</p>
+<ul>
+<li>关于<code>error</code>的原则是遇到err就进行判定<code>err!=nil</code>而不是<code>err==nil</code>，因为后者就会将正确包在括号里，一层一层如套娃一样，不美观也不优雅        </li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">if</span> err==<span class="hljs-literal">nil</span>&#123;<br>    <span class="hljs-keyword">if</span> err==<span class="hljs-literal">nil</span>&#123;<br>        <br>    &#125;<span class="hljs-keyword">else</span>&#123;&#125;<br>&#125;<span class="hljs-keyword">else</span>&#123;&#125;<br><span class="hljs-comment">//修改为</span><br><span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br>    <br>&#125;<br><span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>遇到<code>err</code>就要进行处理，而不是用匿名变量，唯一的对<code>err</code>都不关心，除非对返回结果也不关心</p>
+</li>
+<li><p>很多说go语言语法丑陋的，就是因为错误的返回方式，但是在代码风格上也可以进行优化避免大量的 <code>if err!=nil</code></p>
+</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go">err:=xxxFunction()<br><span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br><br>&#125;<br><span class="hljs-comment">//修改为</span><br><span class="hljs-keyword">if</span> err:=xxxFunction();err!=<span class="hljs-literal">nil</span>&#123;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">DBxxxOperate</span><span class="hljs-params">(xx model)</span><span class="hljs-title">error</span></span>&#123;<br>    err:=DB.Create(&amp;xx).Error<br>    <span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br>        <span class="hljs-keyword">return</span> err<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>   <br>&#125;<br><span class="hljs-comment">//修改为</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">DBxxxOperate</span><span class="hljs-params">(xx model)</span><span class="hljs-title">error</span></span>&#123;<br>    <span class="hljs-keyword">return</span> DB.Create(&amp;xx).Error  <br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li><p><strong>对野生goroutine进行兜底保护</strong></p>
+<p>因为<code>gin</code>框架已经对每一个接口进行了兜底保护，即使发送panic也不会宕机(<code>panic</code>),但是如果在接口中使用了<strong>野生goroutine并且在里面发升了<code>panic</code>，那么整个程序都会崩溃！(包括主程序)</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123; <br>      <span class="hljs-keyword">defer</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span>&#123; <span class="hljs-comment">//兜底保护</span><br>          <span class="hljs-keyword">if</span> err:=<span class="hljs-built_in">recover</span>();err!=<span class="hljs-literal">nil</span>&#123;<br>              logger(<span class="hljs-string">&quot;happen panic!&quot;</span>)<br>              ...<br>          &#125;<br>      &#125;<br>    xxx()<br>  &#125;()<br></code></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="DB层标准化"><a href="#DB层标准化" class="headerlink" title="DB层标准化"></a>DB层标准化</h1><ul>
+<li><p>返回时返回<code>error</code>而不是自定义的<code>rsp</code>结构体(从而到<code>control层</code>后直接作为数据返回给客户端)，<code>db层</code>只是完成数据库相关操作，如果在其他也需要该<code>db层</code>返回的数据并且不需要<code>rsp</code>这样重量级的返回，则需要返回到control会做进一步处理，并且会增加<code>db层</code>的耦合度</p>
+</li>
+<li><p>不要<code>在db层</code>做业务逻辑的操作，业务逻辑操作就该丢到<code>control层</code>，<code>db层</code>只用来做好数据库信息的操作即可，做到功能内聚</p>
+<p>比如对查询到的数据数组进行进一步的操作时，需要将返回至<code>control层</code>再操作，而不是在<code>db层</code>操作后再返回给<code>control层</code></p>
+</li>
+<li><p><del>在db层的操作只有对于Find操作时需要传递指针的(因为只返回error)，其他关于Create、Update、Delete操作只需要传递值即可(如果不需要数据段Create和Update的时间信息)，项目中尽量减少指针传递的操作，避免频繁的内存逃逸增加Go的GC压力</del></p>
+<p>最开始以为传入指针就会发生内存逃逸，后面发现并不是，具体请查看 <a href="https://snowyangyuxin.github.io/2021/07/30/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/">Go逃逸分析详解</a></p>
+</li>
+<li><p>只有对于Find操作时需要传递指针的(因为要获取数据)，其他关于Create、Update、Delete操作只需要传递值即可(如果不需要数据段Create和Update的时间信息)，但是对于传值还是传指针，需要根据具体实际看(对于多字段的传值会有更多的<code>copy</code>操作)</p>
+</li>
+</ul>
+<h1 id="Control层标准化"><a href="#Control层标准化" class="headerlink" title="Control层标准化"></a>Control层标准化</h1><ul>
+<li>函数传递的值能少也要尽量少(前提是满足需求)</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">FindXxx</span><span class="hljs-params">()</span></span>&#123;<br>    <span class="hljs-keyword">var</span> article model<br>    ...<br>    <span class="hljs-keyword">if</span> err:=DBxxxOperate(article.ID,article.Tag,&amp;article);err!=<span class="hljs-literal">nil</span>&#123;<br>        <br>    &#125;    <br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">DBxxxFind</span><span class="hljs-params">(id <span class="hljs-keyword">int</span>,tag <span class="hljs-keyword">string</span>,article *model)</span><span class="hljs-title">error</span></span>&#123;<br>    <span class="hljs-keyword">return</span> DB.Where(<span class="hljs-string">&quot;id=? AND type=?&quot;</span>,id,tag).Find(&amp;article).Error  <br>&#125;<br><span class="hljs-comment">//修改为</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">FindXxx</span><span class="hljs-params">()</span></span>&#123;<br>    <span class="hljs-keyword">var</span> article model<br>    ...<br>    <span class="hljs-keyword">if</span> err:=DBxxxOperate(&amp;article);err!=<span class="hljs-literal">nil</span>&#123;<br>        <br>    &#125;    <br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">DBxxxFind</span><span class="hljs-params">(article *model)</span><span class="hljs-title">error</span></span>&#123;<br>    <span class="hljs-keyword">return</span> DB.Where(<span class="hljs-string">&quot;id=? AND type=?&quot;</span>,atricle.ID,article,Tag).Find(&amp;article).Error  <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>要相信一个原则：<strong>永远不要相信前端给你传来的值</strong>，则对于前端传来的值都需要进行验证，比如delete时需要验证delete_id是否存在，因为就算不存在delete空也不会报错，而对于update更要验证update_id的存在，因为<strong>不存在的话update会在数据库创建一个update_id的对象</strong></li>
+</ul>
+<h1 id="Error返回标准化"><a href="#Error返回标准化" class="headerlink" title="Error返回标准化"></a>Error返回标准化</h1><p>对于API接口的调用返回也是非常重要的，对于返回最要使用同一的结构体进行封装(这样也是为了前端姿势同一和在进行测试时便利)</p>
+<p>采用<code>Code</code>和<code>Data</code>的组合，<del>没有加入消息<code>Message</code></del>和错误<code>Error</code>，<strong>因为对于发生错误时是并不需要前端和客户端知道具体是什么错误</strong>，只需要知道错误码，而后端则可以通过错误码来查看具体api逻辑值错误的地方，而消息Message则可以写在日志中，需要时则进行查看</p>
+<p><strong>更新：现在需要加入消息msg，因为这样前端在测试时才知道是自己出现了问题还是后端的问题</strong></p>
+<p>因为只要是有相应，则说明客户端和服务器相应成功，都应该是返回200，所以设置新的错误码才能有利于去区分不同的错误类型</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Response <span class="hljs-keyword">struct</span> &#123;<br>   Code ErrCode     <span class="hljs-string">`json:&quot;code,omitempty&quot;`</span><br>   Msg  <span class="hljs-keyword">string</span>      <span class="hljs-string">`json:&quot;msg&quot;`</span><br>   Data <span class="hljs-keyword">interface</span>&#123;&#125; <span class="hljs-string">`json:&quot;data,omitempty&quot;`</span><br>&#125;<br><br><span class="hljs-keyword">type</span> ErrCode <span class="hljs-keyword">int</span><br><br><span class="hljs-keyword">const</span> Success ErrCode = <span class="hljs-number">20000</span><br><br><span class="hljs-keyword">const</span> (<br>	ErrService                ErrCode = <span class="hljs-number">1000</span><br>	ErrBindJson                       = <span class="hljs-number">1001</span><br>    ...<br>)<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p>对返回进行进一步封装，可分为成功有返回、成功无返回、错误(是为了在<code>control</code>层写时清晰，知道是哪一种返回类型)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ResSuccessData</span><span class="hljs-params">(c *gin.Context, data <span class="hljs-keyword">interface</span>&#123;&#125;)</span></span> &#123;<br>   ResJson(c, Response&#123;Code: SuccessCode, Data: data&#125;)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ResSuccess</span><span class="hljs-params">(c *gin.Context)</span></span> &#123;<br>   ResJson(c, Response&#123;Code: SuccessCode&#125;)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ResErr</span><span class="hljs-params">(c *gin.Context, code ErrCode)</span></span> &#123;<br>   ResJson(c, Response&#123;Code: code&#125;)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ResJson</span><span class="hljs-params">(c *gin.Context, data <span class="hljs-keyword">interface</span>&#123;&#125;)</span></span> &#123;<br>   c.JSON(http.StatusOK, data)<br>   c.Abort()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在平时或工作中需要对自己代码进行严格的把控，对需要标准化的地方要仔细，这样才能写出高质量的代码</p>
+<p>但是并不是在任何时候都要对代码标准化严格执行，在实际生产中，代码是需要在规定的时间进行产出，如果在任何时候任何地点严格把控代码就会大大拖慢项目进度</p>
+<p>例如在error返回标准化时在项目最初是不需要对错误码进行规范等</p>
+<p>但是在err优化操作、大小写字母命名这样的习惯则需要在任何时候养成</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/" data-id="ckywz5jak000escpccxnw9vly" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Go使用Jaeger实现分布式链路追踪
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">使用yml文件生成SwaggerAPI接口文档</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

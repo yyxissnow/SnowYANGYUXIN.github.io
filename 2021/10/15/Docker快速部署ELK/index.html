@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Docker快速部署ELK | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="网上部署elk的方式多种多样，参差不齐，在尝试后总结出一种快速有效的部署方法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker快速部署ELK">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="网上部署elk的方式多种多样，参差不齐，在尝试后总结出一种快速有效的部署方法">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015092848637.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015093911524.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015094607601.png">
+<meta property="article:published_time" content="2021-10-15T06:22:56.000Z">
+<meta property="article:modified_time" content="2021-10-15T06:22:56.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://snowyangyuxin.github.io/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015092848637.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Docker快速部署ELK" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/" class="article-date">
+  <time datetime="2021-10-15T06:22:56.000Z" itemprop="datePublished">2021-10-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Docker快速部署ELK
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>因为最近需要部署日志收集系统，而网上部署elk的方式多种多样，参差不齐，在尝试后总结出一种快速有效的部署方法</p>
+<h1 id="ELK简介"><a href="#ELK简介" class="headerlink" title="ELK简介"></a>ELK简介</h1><p>ELK Stack是软件集合<code>Elasticsearch</code>、<code>Logstash</code>、<code>Kibana</code>的简称，由这三个软件及其相关的组件可以打造<strong>大规模日志实时处理系统</strong></p>
+<ul>
+<li><p><strong>Elasticsearch</strong> 是一个基于 Lucene 的、支持全文索引的分布式存储和索引引擎，<strong>主要负责将日志索引并存储起来，方便业务方检索查询</strong></p>
+</li>
+<li><p><strong>Logstash</strong>是一个<strong>日志收集、过滤、转发的中间件</strong>，主要负责将各条业务线的各类日志统一收集、过滤后，转发给 Elasticsearch 进行下一步处理</p>
+</li>
+<li><p><strong>Kibana</strong>是一个可视化工具，主要负责<strong>查询 Elasticsearch 的数据并以可视化的方式展现给业务方</strong>，比如各类饼图、直方图、区域图等</p>
+</li>
+</ul>
+<h1 id="Docker部署"><a href="#Docker部署" class="headerlink" title="Docker部署"></a>Docker部署</h1><p>最好使用<strong>4G内存</strong>和<strong>40G磁盘</strong>的服务器，是在没有可以暂时使用虚拟机进行实验</p>
+<p>​    </p>
+<blockquote>
+<p>创建容器之间的通信网络</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker network create docker_elk_test<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>拉取镜像</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">docker pull docker.elastic.co/elasticsearch/elasticsearch:7.3.0<br>docker pull docker.elastic.co/kibana/kibana:7.3.0<br>docker pull docker.elastic.co/logstash/logstash:7.3.0<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<h2 id="部署elasticsearch"><a href="#部署elasticsearch" class="headerlink" title="部署elasticsearch"></a>部署elasticsearch</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">创建配置文件，文件位置可有自己选择<br>mkdir /usr/elk/elastic<br>cd /usr/elk/elastic<br>vim elasticsearch.yml<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs shell">cluster.name: &quot;docker-cluster&quot;<br><span class="hljs-meta">#</span><span class="bash">配置elasticsearch远程访问</span><br>network.host: 0.0.0.0<br><span class="hljs-meta">#</span><span class="bash">不允许es根据磁盘情况来分配shard 防止磁盘不够时不能写数据</span><br><span class="hljs-meta">#</span><span class="bash">cluster.routing.allocation.disk.threshold_enabled: <span class="hljs-literal">false</span></span><br><span class="hljs-meta">#</span><span class="bash">磁盘占有率达到99%时将不允许往es写数据，只能读数据 默认95%</span><br><span class="hljs-meta">#</span><span class="bash">cluster.routing.allocation.disk.watermark.flood_stage: 99%</span><br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p><strong>docker 部署</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run -it -d --name es_test -e ES_JAVA_OPTS=&quot;-Xms256m -Xmx256m&quot; -p 9200:9200 -p 9300:9300 -v /usr/elk/elastic/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml --network docker_elk_test -e &quot;discovery.type=single-node&quot; docker.elastic.co/elasticsearch/elasticsearch:7.3.0<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs plaintext"># 指定jjvm运行参数 最大最小内存<br>-e ES_JAVA_OPTS=&quot;-Xms256m -Xmx256m&quot; <br># 指定通信网络<br>--network docker_elk_test<br># 指定单节点部署<br>-e &quot;discovery.type=single-node&quot;<br></code></pre></td></tr></table></figure>
+
+<p>启动后在本机上查看 <strong>localhost:9200</strong> </p>
+<p><img src="/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015092848637.png" alt="image-20211015092848637"></p>
+<h2 id="部署kibana"><a href="#部署kibana" class="headerlink" title="部署kibana"></a>部署kibana</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">mkdir /usr/elk/kibana<br>cd /usr/elk/kibana<br>vim kibana.yml<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs shell">server.name: kibana<br><span class="hljs-meta">#</span><span class="bash"> 配置Kibana的远程访问</span><br>server.host: &quot;0.0.0.0&quot;<br><span class="hljs-meta">#</span><span class="bash"> 配置es访问地址</span><br>elasticsearch.hosts: [ &quot;http://xx.xx.xx.xx:9200&quot; ]<br><span class="hljs-meta">#</span><span class="bash"> 汉化界面</span><br>i18n.locale: &quot;zh-CN&quot;<br>xpack.monitoring.ui.container.elasticsearch.enabled: true<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p><strong>docker 部署</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run -it -d -p 5601:5601  -v /usr/elk/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml -v /etc/localtime:/etc/localtime -e ELASTICSEARCH_URL=http://xx.xx.xx.xx:9200 --network=docker_elk_test --name kibana_test docker.elastic.co/kibana/kibana:7.3.0<br></code></pre></td></tr></table></figure>
+
+<p>启动后本子查看 <strong>localhost:5601</strong></p>
+<p><img src="/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015093911524.png" alt="image-20211015093911524"></p>
+<h2 id="部署logstash"><a href="#部署logstash" class="headerlink" title="部署logstash"></a>部署logstash</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">mkdir /usr/elk/logstash/config<br>cd /usr/elk/logstash/config<br>vim logstash.yml<br>mkdir /usr/elk/logstash/pipeline<br>cd /usr/elk/logstash/pipeline<br>vim logstash.conf<br></code></pre></td></tr></table></figure>
+
+<p><strong>logstash.yml</strong></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># 配置logstash远程访问</span><br><span class="hljs-attr">http.host:</span> <span class="hljs-string">&quot;0.0.0.0&quot;</span><br><span class="hljs-comment"># 配置es访问地址</span><br><span class="hljs-attr">xpack.monitoring.elasticsearch.hosts:</span> [ <span class="hljs-string">&quot;http://xx.xx.xx.xx:9200&quot;</span> ]<br></code></pre></td></tr></table></figure>
+
+<p><strong>logstash.conf</strong></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs sh">input &#123;<br>  file &#123;<br>    <span class="hljs-built_in">type</span> =&gt; <span class="hljs-string">&quot;systemlog-localhost&quot;</span><br>    <span class="hljs-comment">#指定文件采集路径</span><br>    path =&gt; <span class="hljs-string">&quot;/var/log/game/*.log&quot;</span><br>    <span class="hljs-comment">#指定收集json格式</span><br>    codec =&gt; json &#123;<br>       charset =&gt; <span class="hljs-string">&quot;UTF-8&quot;</span><br>    &#125;<br>    <span class="hljs-comment">#开始收集点</span><br>    start_position =&gt; <span class="hljs-string">&quot;beginning&quot;</span><br>    <span class="hljs-comment">#扫描间隔时间，默认是1s，建议5s</span><br>    stat_interval =&gt; <span class="hljs-string">&quot;5&quot;</span><br>  &#125;<br>&#125;<br><br>output &#123;<br>  elasticsearch &#123;<br>    hosts =&gt; [<span class="hljs-string">&quot;xx.xx.xx.xx:9200&quot;</span>]<br>    <span class="hljs-comment"># 指定输出es的index</span><br>    index =&gt; <span class="hljs-string">&quot;game_test&quot;</span><br> &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p><strong>docker部署</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run -it -d --name logstash_test --network=docker_elk_test -p 5000:5000 -v /usr/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml -v /usr/elk/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf -v /usr/log/game:/var/log/game docker.elastic.co/logstash/logstash:7.3.0 <br></code></pre></td></tr></table></figure>
+
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 一定要指明收集地址，上面配置文件的路径是容器内部的，一定要建立与外部的数据卷</span><br>-v /usr/<span class="hljs-built_in">log</span>/game:/var/<span class="hljs-built_in">log</span>/game<br></code></pre></td></tr></table></figure>
+
+<p>现在在文件 <strong>/usr/log/game/xxx.log</strong> 在kibana创建索引index后就可以查看</p>
+<p><img src="/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015094607601.png" alt="image-20211015094607601"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>上文只是<code>elk</code>的初步部署方式</p>
+<p>在<code>logstash</code>中还有很多采集日志的小技巧，特别是<code>grok</code>中的正则</p>
+<p><a target="_blank" rel="noopener" href="https://www.elastic.co/guide/en/logstash/current/plugins-inputs-file.html#plugins-inputs-file-sincedb_path">logstash官网</a> 中可以进一步查看相应内容</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/" data-id="ckywz5jaf0001scpcduetbdux" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Gin中添加限流中间件
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/10/15/Go%E5%86%85%E5%AD%98%E9%80%83%E9%80%B8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go逃逸分析</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

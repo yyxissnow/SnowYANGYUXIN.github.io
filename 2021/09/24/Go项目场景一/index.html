@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go项目场景一 | Snow的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在遇到多goroutine操作一个chan特殊情况时引发的竞争问题和思考解决">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go项目场景一">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2021/09/24/Go%E9%A1%B9%E7%9B%AE%E5%9C%BA%E6%99%AF%E4%B8%80/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="在遇到多goroutine操作一个chan特殊情况时引发的竞争问题和思考解决">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-09-24T15:15:34.000Z">
+<meta property="article:modified_time" content="2021-09-24T15:15:34.000Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Snow的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Snow的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://snowyangyuxin.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Go项目场景一" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/09/24/Go%E9%A1%B9%E7%9B%AE%E5%9C%BA%E6%99%AF%E4%B8%80/" class="article-date">
+  <time datetime="2021-09-24T15:15:34.000Z" itemprop="datePublished">2021-09-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go项目场景一
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h1><p>在项目启动后有一个会开一个<code>goroutine</code>，里面有一个<code>chan</code>接收消息数据，如果接收到消息就将数据库的某些配置拉到本地进行配置下发</p>
+<p>之前是设置定时器，每隔一段时间就自动给<code>chan</code>发送消息，现在向进行<strong>实时配置下发</strong>，就是某些API被调用后(对指定数据库消息进行变更的API)将给<code>chan</code>发送消息</p>
+<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>因为API调用时并发进行的，如果在短时间内有大量的特定API调用，则都会给<code>chan</code>发送消息，而对<code>chan</code>的处理只是单协程，那么之后的请求将会<strong>在<code>chan</code>外堵塞</strong>，可能就达到不了<strong>实时</strong>下发的效果</p>
+<p>对于发送消息，其实<strong>只要后面调用API的<code>goroutine</code>发送的消息即可</strong>，因为后面更新数据库的信息里肯定是包含了前面更新的信息</p>
+<h1 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h1><blockquote>
+<p>目前对<code>chan</code>的处理只是单协程，<strong>能不能使用多<code>goroutine</code>去并发竞争<code>chan</code>，提高对<code>chan</code>的处理能力？</strong></p>
+</blockquote>
+<p>不能，因为<code>chan</code>中要更改一个全局<code>map</code>的变量，会加锁，即使使用多<code>goroutine</code>在发送消息给<code>chan</code>后也会进行堵塞</p>
+<p>​    </p>
+<blockquote>
+<p>能不能使用一种机制，就是给发送消息给chan时，看是否有消息在chan外堵塞，有的话则将自己进行替换</p>
+</blockquote>
+<p>因为之后更新的消息肯定是包含前面更新的消息，所以在之前调用API的<code>goroutine</code>和之后调用API的<code>goroutine</code>同时发送消息时，<strong>应该是该舍弃前面的消息保留后面的消息</strong></p>
+<p>原理上是可行的，但实际上操作起来很难，<strong>因为无法获知chan中是否有缓存</strong>，只能取出，并且只能取一个，而且取值操作在<code>chan</code>没有缓存时还会堵塞</p>
+<p>并且还是在每次API调用操作时都会给<code>chan</code>发消息，根本上还是会造成<code>chan</code>的堵塞</p>
+<p>​    </p>
+<blockquote>
+<p>由上面，想是否可以有一种机制，使得不是每次调API用都给<code>chan</code>发送消息，而是满足一定条件才会给<code>chan</code>发送消息</p>
+</blockquote>
+<p>这样可以根本解决<code>chan</code>堵塞的问题，<strong>只要在每次发送前短暂的等待一会</strong>，<strong>看是否有新的<code>goroutine</code>要发送消息，如果要则抛弃本次的消息发送</strong></p>
+<h1 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h1><p>定义实时配置下发的全局变量和结构体</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> realtimeMachine *RealTimeMachine<br><span class="hljs-keyword">type</span> RealTimeMachine <span class="hljs-keyword">struct</span> &#123;<br>   Random <span class="hljs-keyword">int64</span> <span class="hljs-comment">//生成随机数</span><br>   Num    <span class="hljs-keyword">int</span>   <span class="hljs-comment">//强制下发触发次数</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>思路：<strong>每次发送前随机生成64位的int数赋值给实时配置下发器的变量，然后设置一个短暂的等待时间，时间后看该变量是否发生改变，如果发生改变则放弃给chan发送消息，如果没有改变则给chan发送消息</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ImmediatelyUpdateApi</span><span class="hljs-params">()</span></span> &#123;<br>   <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>      xxxApi.ImmediatelyUpdateApi(loader, realtimeMachine, rand.Int63()) <span class="hljs-comment">//随机生成64位int数</span><br>   &#125;()<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(xxxApi *xxxApixxx)</span> <span class="hljs-title">ImmediatelyUpdateApi</span><span class="hljs-params">(loader Loader, machine *translate.RealTimeMachine, random <span class="hljs-keyword">int64</span>)</span></span> &#123;<br>	<span class="hljs-keyword">if</span> err := xxxApi.Translate(loader); err != <span class="hljs-literal">nil</span> &#123; <span class="hljs-comment">//去数据库更新配置到本地变量</span><br>		logger.Warn(<span class="hljs-string">&quot;timed get api is null&quot;</span>)<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-keyword">if</span> !xxxApi.CompareDiff() &#123; <span class="hljs-comment">//如果更新后本地变量没有发生变化，则不需要发送消息给chan了</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	machine.Random = random<br>	machine.Num++<br>	<span class="hljs-comment">//虽然可能因为多次并发而达不到每十次强制触发一次，但是只要有运行多次强制触发一次的机制即可</span><br>	<span class="hljs-keyword">if</span> machine.Num == <span class="hljs-number">10</span> &#123;<br>		machine.Num = <span class="hljs-number">0</span><br>		xxxApi.Chan &lt;- <span class="hljs-string">&quot;message&quot;</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>    <span class="hljs-comment">//设置等待更新时间，时间内如果没有发生更改(没有新的goroutine发送消息)则发送消息</span><br>	time.Sleep(time.Millisecond * <span class="hljs-number">300</span>)<br>	<span class="hljs-keyword">if</span> machine.Random == random &#123;<br>		xxxApi.Ch &lt;- <span class="hljs-string">&quot;message&quot;</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>    <span class="hljs-comment">//如果发生更改则放弃本次消息发送</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p>上面有一个计数强制发送的机制，是因为避免这种情况发生：</p>
+<p>加入设置的是等待时间300ms，如果每300ms内都有新goroutine发送，那么就会一直放弃本次消息发送，迟迟无法更新配置信息</p>
+<p>那么就需要设置一个<strong>强制发送的机制</strong>，就是累计指定次数，就必须发送消息一次，这样就会闭上上诉情况</p>
+<p><del><strong>虽然可能因为多次并发而达不到指定次数强制触发一次(如果要则需要上锁，那么就会影响性能)，但是只要有运行多次强制触发一次的机制即可</strong></del></p>
+<p><strong>下面进行了优化更新！</strong></p>
+<h1 id="优化解决"><a href="#优化解决" class="headerlink" title="优化解决"></a>优化解决</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> realtimeMachine *RealTimeMachine<br><span class="hljs-keyword">type</span> RealTimeMachine <span class="hljs-keyword">struct</span> &#123;<br>   Random <span class="hljs-keyword">int64</span> <span class="hljs-comment">//生成随机数</span><br>   Tiem   <span class="hljs-keyword">int64</span> <span class="hljs-comment">//记录最大超时时间</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><p><strong>对野生goroutine进行兜底保护</strong></p>
+<p>因为<code>gin</code>框架已经对每一个接口进行了兜底保护，即使发送panic也不会宕机(<code>panic</code>),但是如果在接口中使用了<strong>野生goroutine并且在里面发升了<code>panic</code>，那么整个程序都会崩溃！(包括主程序)</strong></p>
+</li>
+<li><p>使用最大超时时间代替强制发送次数机制，避免了<strong>因多次并发而达不到指定次数强制触发一次</strong>，使得发送时间更加平滑</p>
+</li>
+<li><p><strong>最小等待时间应该大于chan接收信息后函数处理的平均时间</strong></p>
+<p>如果小于，则等待后的时间差还是可能最造成chan阻塞(比如处理10ms，等待2ms，那么如果每3ms发送一次信息，那么每次都会按时发送不会被丢弃并且也会阻塞在chan外(内部用了锁))</p>
+</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ImmediatelyUpdateApi</span><span class="hljs-params">()</span></span> &#123;<br>   <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123; <br>       <span class="hljs-keyword">defer</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span>&#123; <span class="hljs-comment">//兜底保护</span><br>           <span class="hljs-keyword">if</span> err:=<span class="hljs-built_in">recover</span>();err!=<span class="hljs-literal">nil</span>&#123;<br>               logger(<span class="hljs-string">&quot;happen panic!&quot;</span>)<br>           &#125;<br>       &#125;<br>       xxxApi.ImmediatelyUpdateApi(loader, realtimeMachine, rand.Int63()) <span class="hljs-comment">//随机生成64位int数</span><br>   &#125;()<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(xxxApi *xxxApixxx)</span> <span class="hljs-title">ImmediatelyUpdateApi</span><span class="hljs-params">(loader Loader, machine *translate.RealTimeMachine, random <span class="hljs-keyword">int64</span>)</span></span> &#123;<br>	<span class="hljs-keyword">if</span> err := xxxApi.Translate(loader); err != <span class="hljs-literal">nil</span> &#123; <span class="hljs-comment">//去数据库更新配置到本地变量</span><br>		logger.Warn(<span class="hljs-string">&quot;timed get api is null&quot;</span>)<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-keyword">if</span> !xxxApi.CompareDiff() &#123; <span class="hljs-comment">//如果更新后本地变量没有发生变化，则不需要发送消息给chan了</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	machine.Random = random<br>	now := time.Now().Unix()<br>	<span class="hljs-keyword">if</span> now-machine.Time &lt; <span class="hljs-number">1</span> &#123; <span class="hljs-comment">//设置最大超时时间，每隔1s的请求都会强制发送</span><br>		machine.Time = now<br>		envoyRemoteApi.Ch &lt;- <span class="hljs-string">&quot;envoy&quot;</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>    <span class="hljs-comment">//设置最小等待更新时间，时间内如果没有发生更改(没有新的goroutine发送消息)则发送消息</span><br>	time.Sleep(time.Millisecond * <span class="hljs-number">300</span>) <span class="hljs-comment">//最小等待时间应该大于发送消息后函数的处理时间</span><br>	<span class="hljs-keyword">if</span> machine.Random == random &#123;<br>		xxxApi.Ch &lt;- <span class="hljs-string">&quot;message&quot;</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>    <span class="hljs-comment">//如果发生更改则放弃本次消息发送</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://snowyangyuxin.github.io/2021/09/24/Go%E9%A1%B9%E7%9B%AE%E5%9C%BA%E6%99%AF%E4%B8%80/" data-id="ckywz5jam000oscpccihpdwul" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/09/24/Go_copier%E5%BA%93/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Go使用copier库
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/09/10/Go%E5%AE%9E%E7%8E%B0%E9%98%B2%E9%87%8D%E6%94%BE%E6%94%BB%E5%87%BB/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go实现防重放攻击</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/GORM/" rel="tag">GORM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Swagger/" rel="tag">Swagger</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/" rel="tag">test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" rel="tag">星辰缘</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/GORM/" style="font-size: 10px;">GORM</a> <a href="/tags/Golang/" style="font-size: 20px;">Golang</a> <a href="/tags/Swagger/" style="font-size: 10px;">Swagger</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/test/" style="font-size: 10px;">test</a> <a href="/tags/%E6%98%9F%E8%BE%B0%E7%BC%98/" style="font-size: 10px;">星辰缘</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/12/">十二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/10/">十月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">九月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">七月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/12/14/Go%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AA/">Go使用Jaeger实现分布式链路追踪</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Go%E4%BB%A3%E7%A0%81%E6%A0%87%E5%87%86%E5%8C%96/">Go标准化</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/">使用yml文件生成SwaggerAPI接口文档</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Gin%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%99%90%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6/">Gin中添加限流中间件</a>
+          </li>
+        
+          <li>
+            <a href="/2021/10/15/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/">Docker快速部署ELK</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <img src="https://static.dy208.cn/o_1dfilp8ruo521thr1hvf18ji17soa.png">
+<a href="http://www.beian.miit.gov.cn/"  style="color:#f72b07" target="_blank">蜀ICP备2021020213号-1</a>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
