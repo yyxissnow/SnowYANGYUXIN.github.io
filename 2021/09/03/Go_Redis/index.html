@@ -80,7 +80,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -198,7 +198,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      3.3k 字
     </span>
   
 
@@ -207,7 +207,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      28 分钟
     </span>
   
 
@@ -242,7 +242,7 @@
               <h1 id="Docker-安装-Redis"><a href="#Docker-安装-Redis" class="headerlink" title="Docker 安装 Redis"></a>Docker 安装 Redis</h1><blockquote>
 <p>创建data文件做数据持久化存储时</p>
 </blockquote>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mkdir /data/redis<br>mkdir /data/redis/data <br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><pre><code class="hljs sh">mkdir /data/redis<br>mkdir /data/redis/data <br></code></pre></td></tr></table></figure>
 
 <p>​    </p>
 <blockquote>
@@ -250,7 +250,7 @@
 </blockquote>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">touch /data/redis/redis.conf<br></code></pre></td></tr></table></figure>
 
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs plaintext"># Redis默认不是以守护进程的方式运行<br>daemonize no<br><br># 指定Redis监听端口，默认端口为6379<br>port 6379<br><br># 绑定的主机地址，不要绑定容器的本地127.0.0.1地址，因为这样就无法在容器外部访问<br>bind 0.0.0.0<br><br># 持久化<br>appendonly yes<br><br>#设置密码<br>requirepass password  <br></code></pre></td></tr></table></figure>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs vala"><span class="hljs-meta"># Redis默认不是以守护进程的方式运行</span><br>daemonize no<br><br><span class="hljs-meta"># 指定Redis监听端口，默认端口为6379</span><br>port <span class="hljs-number">6379</span><br><br><span class="hljs-meta"># 绑定的主机地址，不要绑定容器的本地127.0.0.1地址，因为这样就无法在容器外部访问</span><br>bind <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span><br><br><span class="hljs-meta"># 持久化</span><br>appendonly yes<br><br><span class="hljs-meta">#设置密码</span><br>requirepass password  <br></code></pre></td></tr></table></figure>
 
 <p>​    </p>
 <blockquote>
@@ -266,7 +266,7 @@
 <h1 id="Go-中使用-Redis"><a href="#Go-中使用-Redis" class="headerlink" title="Go 中使用 Redis"></a>Go 中使用 Redis</h1><blockquote>
 <p>安装 go-redis v8</p>
 </blockquote>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">go get github.com/go-redis/redis/v8  <br></code></pre></td></tr></table></figure>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">go</span> <span class="hljs-built_in">get</span> github.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">go</span>-redis/redis/v8  <br></code></pre></td></tr></table></figure>
 
 <p>​    </p>
 <blockquote>

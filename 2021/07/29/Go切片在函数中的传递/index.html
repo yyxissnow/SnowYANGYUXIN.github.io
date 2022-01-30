@@ -79,7 +79,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -197,7 +197,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      3.2k 字
     </span>
   
 
@@ -206,7 +206,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      27 分钟
     </span>
   
 
@@ -239,7 +239,7 @@
             
             <div class="markdown-body">
               <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在优化之前实习生的代码，在做<code>control</code>层和<code>db</code>层之间参数传递的时候，老师提出了切片就是引用类型，那么在使用数据库<code>Find</code>功能时只需要传<code>model</code>切片即可，就不需要传切片指针了，但是自己在实验的时候发现直接传切片时无法获取值的，只有传切片指针才行</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//传切片</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GetArticles</span><span class="hljs-params">(articles []model.Article)</span> <span class="hljs-title">error</span></span> &#123;<br>	<span class="hljs-keyword">return</span> db.GetMysqlDB().Order(<span class="hljs-string">&quot;id desc&quot;</span>).Find(&amp;articles).Error<br>&#125;<br><span class="hljs-comment">//传切片指针</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GetArticles</span><span class="hljs-params">(articles *[]model.Article)</span> <span class="hljs-title">error</span></span> &#123;<br>	<span class="hljs-keyword">return</span> db.GetMysqlDB().Order(<span class="hljs-string">&quot;id desc&quot;</span>).Find(&amp;articles).Error<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//传切片</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GetArticles</span><span class="hljs-params">(articles []model.Article)</span> <span class="hljs-title">error</span></span> &#123;<br>	<span class="hljs-keyword">return</span> db.GetMysqlDB().Order(<span class="hljs-string">&quot;id desc&quot;</span>).Find(&amp;articles).Error<br>&#125;<br><span class="hljs-comment">//传切片指针</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GetArticles</span><span class="hljs-params">(articles *[]model.Article)</span> <span class="hljs-title">error</span></span> &#123;<br>	<span class="hljs-keyword">return</span> db.GetMysqlDB().Order(<span class="hljs-string">&quot;id desc&quot;</span>).Find(&amp;articles).Error<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>后对此情况对网上的参考资料引用了大部分，做了少许修改的标注</p>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/LYue123/article/details/88363685?utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-2.base&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-2.base">引用参考相关文章</a></p>

@@ -79,7 +79,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -197,7 +197,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      2.7k 字
     </span>
   
 
@@ -206,7 +206,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      23 分钟
     </span>
   
 
@@ -239,7 +239,7 @@
             
             <div class="markdown-body">
               <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在重构公司项目的<code>model</code>层，发现在数据库<code>model</code>向返回<code>ack  model</code>之间的结构体转换时，因为<code>model</code>字段多，则存在大量的直接赋值，不美观也不优雅，例如</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(person *Person)</span> <span class="hljs-title">MapTo</span><span class="hljs-params">()</span> <span class="hljs-title">model</span>.<span class="hljs-title">Student</span></span> &#123;<br>    <span class="hljs-keyword">var</span> student model.Student<br>	now := time.Now()<br>    student.ID=person.ID<br>    student.Name=persobn.Name<br>    student.Age=persobn.Age<br>    student.Phone=persobn.Phone<br>    student.Address=persobn.Address<br>    student.Gender=persobn.Gender<br>    student.ParentPhone=persobn.ParentPhone<br>    student.Mother=persobn.Mother<br>    student.Father=persobn.Father<br>    student.Socre=<span class="hljs-number">100</span><br>	<span class="hljs-keyword">return</span> studnet<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(person *Person)</span> <span class="hljs-title">MapTo</span><span class="hljs-params">()</span> <span class="hljs-title">model</span>.<span class="hljs-title">Student</span></span> &#123;<br>    <span class="hljs-keyword">var</span> student model.Student<br>	now := time.Now()<br>    student.ID=person.ID<br>    student.Name=persobn.Name<br>    student.Age=persobn.Age<br>    student.Phone=persobn.Phone<br>    student.Address=persobn.Address<br>    student.Gender=persobn.Gender<br>    student.ParentPhone=persobn.ParentPhone<br>    student.Mother=persobn.Mother<br>    student.Father=persobn.Father<br>    student.Socre=<span class="hljs-number">100</span><br>	<span class="hljs-keyword">return</span> studnet<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>而使用Go的copier库可以<strong>完成不同类型结构体相同字段的赋值</strong>，并且还可以<strong>完成不同字段的赋值</strong>，下面将进行简单的演示</p>
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">go get github.com/jinzhu/copier<br></code></pre></td></tr></table></figure>

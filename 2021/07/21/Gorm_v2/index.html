@@ -80,7 +80,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -198,7 +198,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      2.3k 字
     </span>
   
 
@@ -207,7 +207,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      20 分钟
     </span>
   
 
@@ -243,10 +243,10 @@
 <p><a target="_blank" rel="noopener" href="https://gorm.io/zh_CN/docs/index.html">Gorm官方文档</a></p>
 <p><a target="_blank" rel="noopener" href="https://learnku.com/docs/gorm/v2/connecting_to_the_database/9731">Gorm文档</a></p>
 <h1 id="安装Gorm-v2"><a href="#安装Gorm-v2" class="headerlink" title="安装Gorm v2"></a>安装Gorm v2</h1><p>GORM 官方支持的数据库类型有： <code>MySQL</code>, <code>PostgreSQL</code>, <code>SQlite</code>, <code>SQL Server</code></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">go get -u gorm.io/gorm<br>go get -u gorm.io/driver/sqlite<br></code></pre></td></tr></table></figure>
+<figure class="highlight maxima"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><pre><code class="hljs maxima"><span class="hljs-built_in">go</span> <span class="hljs-built_in">get</span> -u gorm.io/gorm<br><span class="hljs-built_in">go</span> <span class="hljs-built_in">get</span> -u gorm.io/driver/sqlite<br></code></pre></td></tr></table></figure>
 
 <p>如果安装<code>sqlite</code>可能会报错</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">exec: &quot;gcc&quot;: executable file not found in %PATH%<br></code></pre></td></tr></table></figure>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mel"><span class="hljs-keyword">exec</span>: <span class="hljs-string">&quot;gcc&quot;</span>: executable <span class="hljs-keyword">file</span> not found <span class="hljs-keyword">in</span> %PATH%<br></code></pre></td></tr></table></figure>
 
 <p>原因是<code>sqlite 3</code>是个<code>cgo</code>库，需要<code>gcd</code>编译c代码，需要安装<code>mingw</code></p>
 <p><strong>解决方法</strong></p>
@@ -259,7 +259,7 @@
 </li>
 </ul>
 <p>添加后如果<strong>还是运行失败</strong>，就是环境变量更改未生效，<strong>重启电脑</strong>就可以了</p>
-<h1 id="安装Msyql驱动并使用"><a href="#安装Msyql驱动并使用" class="headerlink" title="安装Msyql驱动并使用"></a>安装Msyql驱动并使用</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">go get gorm.io/driver/mysql<br></code></pre></td></tr></table></figure>
+<h1 id="安装Msyql驱动并使用"><a href="#安装Msyql驱动并使用" class="headerlink" title="安装Msyql驱动并使用"></a>安装Msyql驱动并使用</h1><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">go get gorm.io<span class="hljs-regexp">/driver/my</span>sql<br></code></pre></td></tr></table></figure>
 
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>  dsn := <span class="hljs-string">&quot;user:password@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&amp;parseTime=True&amp;loc=Local&quot;</span><br>  db, err := gorm.Open(mysql.Open(dsn), &amp;gorm.Config&#123;&#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
 

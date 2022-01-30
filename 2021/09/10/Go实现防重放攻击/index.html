@@ -79,7 +79,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -197,7 +197,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      1.7k 字
     </span>
   
 
@@ -206,7 +206,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      15 分钟
     </span>
   
 
@@ -258,7 +258,7 @@
 <p>并且服务器缓存的<strong>随机数设置一个60秒的存活时间</strong>，防止客户端拿到随机数后不进行后续操作导致随机数在缓存无法被清除而累积的问题    </p>
 <h1 id="Go实现防重放攻击"><a href="#Go实现防重放攻击" class="headerlink" title="Go实现防重放攻击"></a>Go实现防重放攻击</h1><p>使用<strong>基于应答式的方案</strong>实现防重放攻击</p>
 <p><strong>获取随机数</strong></p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">PutRandom</span><span class="hljs-params">(c *gin.Context)</span></span> &#123;<br>   value, err := setRandom()<br>   <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>      c.JSON(<span class="hljs-number">400</span>,fmt.Sprintf(<span class="hljs-string">&quot;redis set random err:%v&quot;</span>, err))<br>      <span class="hljs-keyword">return</span><br>   &#125;<br>   c.JSON(<span class="hljs-number">200</span>, value)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">setRandom</span><span class="hljs-params">()</span> <span class="hljs-params">(<span class="hljs-keyword">string</span>, error)</span></span> &#123;<br>	rand.Seed(time.Now().UnixNano()) <span class="hljs-comment">// 设置纳秒级别的随机数</span><br>	random := rand.Intn(math.MaxInt32)<br>	str := strconv.Itoa(random)<br>	<span class="hljs-keyword">if</span> _, err := Redis.Set(str, <span class="hljs-string">&quot;true&quot;</span>, time.Second*<span class="hljs-number">60</span>).Result(); err != <span class="hljs-literal">nil</span> &#123; <span class="hljs-comment">// 设置随机数存活时间为60s</span><br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;&quot;</span>, err<br>	&#125;<br>	<span class="hljs-keyword">return</span> str, <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">PutRandom</span><span class="hljs-params">(c *gin.Context)</span></span> &#123;<br>   value, err := setRandom()<br>   <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>      c.JSON(<span class="hljs-number">400</span>,fmt.Sprintf(<span class="hljs-string">&quot;redis set random err:%v&quot;</span>, err))<br>      <span class="hljs-keyword">return</span><br>   &#125;<br>   c.JSON(<span class="hljs-number">200</span>, value)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">setRandom</span><span class="hljs-params">()</span> <span class="hljs-params">(<span class="hljs-keyword">string</span>, error)</span></span> &#123;<br>	rand.Seed(time.Now().UnixNano()) <span class="hljs-comment">// 设置纳秒级别的随机数</span><br>	random := rand.Intn(math.MaxInt32)<br>	str := strconv.Itoa(random)<br>	<span class="hljs-keyword">if</span> _, err := Redis.Set(str, <span class="hljs-string">&quot;true&quot;</span>, time.Second*<span class="hljs-number">60</span>).Result(); err != <span class="hljs-literal">nil</span> &#123; <span class="hljs-comment">// 设置随机数存活时间为60s</span><br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;&quot;</span>, err<br>	&#125;<br>	<span class="hljs-keyword">return</span> str, <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>​    </p>
 <p><strong>校验随机数</strong></p>

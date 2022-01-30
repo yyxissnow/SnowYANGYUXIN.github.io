@@ -79,7 +79,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -197,7 +197,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      3.4k 字
     </span>
   
 
@@ -206,7 +206,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      29 分钟
     </span>
   
 
@@ -259,7 +259,7 @@
 </blockquote>
 <p>这样可以根本解决<code>chan</code>堵塞的问题，<strong>只要在每次发送前短暂的等待一会</strong>，<strong>看是否有新的<code>goroutine</code>要发送消息，如果要则抛弃本次的消息发送</strong></p>
 <h1 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h1><p>定义实时配置下发的全局变量和结构体</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> realtimeMachine *RealTimeMachine<br><span class="hljs-keyword">type</span> RealTimeMachine <span class="hljs-keyword">struct</span> &#123;<br>   Random <span class="hljs-keyword">int64</span> <span class="hljs-comment">//生成随机数</span><br>   Num    <span class="hljs-keyword">int</span>   <span class="hljs-comment">//强制下发触发次数</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> realtimeMachine *RealTimeMachine<br><span class="hljs-keyword">type</span> RealTimeMachine <span class="hljs-keyword">struct</span> &#123;<br>   Random <span class="hljs-keyword">int64</span> <span class="hljs-comment">//生成随机数</span><br>   Num    <span class="hljs-keyword">int</span>   <span class="hljs-comment">//强制下发触发次数</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>思路：<strong>每次发送前随机生成64位的int数赋值给实时配置下发器的变量，然后设置一个短暂的等待时间，时间后看该变量是否发生改变，如果发生改变则放弃给chan发送消息，如果没有改变则给chan发送消息</strong></p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ImmediatelyUpdateApi</span><span class="hljs-params">()</span></span> &#123;<br>   <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>      xxxApi.ImmediatelyUpdateApi(loader, realtimeMachine, rand.Int63()) <span class="hljs-comment">//随机生成64位int数</span><br>   &#125;()<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(xxxApi *xxxApixxx)</span> <span class="hljs-title">ImmediatelyUpdateApi</span><span class="hljs-params">(loader Loader, machine *translate.RealTimeMachine, random <span class="hljs-keyword">int64</span>)</span></span> &#123;<br>	<span class="hljs-keyword">if</span> err := xxxApi.Translate(loader); err != <span class="hljs-literal">nil</span> &#123; <span class="hljs-comment">//去数据库更新配置到本地变量</span><br>		logger.Warn(<span class="hljs-string">&quot;timed get api is null&quot;</span>)<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-keyword">if</span> !xxxApi.CompareDiff() &#123; <span class="hljs-comment">//如果更新后本地变量没有发生变化，则不需要发送消息给chan了</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	machine.Random = random<br>	machine.Num++<br>	<span class="hljs-comment">//虽然可能因为多次并发而达不到每十次强制触发一次，但是只要有运行多次强制触发一次的机制即可</span><br>	<span class="hljs-keyword">if</span> machine.Num == <span class="hljs-number">10</span> &#123;<br>		machine.Num = <span class="hljs-number">0</span><br>		xxxApi.Chan &lt;- <span class="hljs-string">&quot;message&quot;</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>    <span class="hljs-comment">//设置等待更新时间，时间内如果没有发生更改(没有新的goroutine发送消息)则发送消息</span><br>	time.Sleep(time.Millisecond * <span class="hljs-number">300</span>)<br>	<span class="hljs-keyword">if</span> machine.Random == random &#123;<br>		xxxApi.Ch &lt;- <span class="hljs-string">&quot;message&quot;</span><br>		<span class="hljs-keyword">return</span><br>	&#125;<br>    <span class="hljs-comment">//如果发生更改则放弃本次消息发送</span><br>&#125;<br></code></pre></td></tr></table></figure>

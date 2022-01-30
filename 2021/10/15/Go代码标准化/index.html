@@ -79,7 +79,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -197,7 +197,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      3.7k 字
     </span>
   
 
@@ -206,7 +206,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      31 分钟
     </span>
   
 
@@ -251,7 +251,7 @@
 <ul>
 <li>关于<code>error</code>的原则是遇到err就进行判定<code>err!=nil</code>而不是<code>err==nil</code>，因为后者就会将正确包在括号里，一层一层如套娃一样，不美观也不优雅        </li>
 </ul>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">if</span> err==<span class="hljs-literal">nil</span>&#123;<br>    <span class="hljs-keyword">if</span> err==<span class="hljs-literal">nil</span>&#123;<br>        <br>    &#125;<span class="hljs-keyword">else</span>&#123;&#125;<br>&#125;<span class="hljs-keyword">else</span>&#123;&#125;<br><span class="hljs-comment">//修改为</span><br><span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br>    <br>&#125;<br><span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">if</span> err==<span class="hljs-literal">nil</span>&#123;<br>    <span class="hljs-keyword">if</span> err==<span class="hljs-literal">nil</span>&#123;<br>        <br>    &#125;<span class="hljs-keyword">else</span>&#123;&#125;<br>&#125;<span class="hljs-keyword">else</span>&#123;&#125;<br><span class="hljs-comment">//修改为</span><br><span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br>    <br>&#125;<br><span class="hljs-keyword">if</span> err!=<span class="hljs-literal">nil</span>&#123;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
 
 <ul>
 <li><p>遇到<code>err</code>就要进行处理，而不是用匿名变量，唯一的对<code>err</code>都不关心，除非对返回结果也不关心</p>

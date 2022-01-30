@@ -79,7 +79,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -197,7 +197,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      1.9k 字
     </span>
   
 
@@ -206,7 +206,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      17 分钟
     </span>
   
 
@@ -240,7 +240,7 @@
             <div class="markdown-body">
               <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><code>Gouroutine</code>是Go开发中最常用的功能之一，开启一个Goroutine很简单，但是想要控制一个<code>Goroutine</code>的生命周期却需要一些技巧</p>
 <p>最常见的是<strong>goroutine泄露</strong>问题</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">leak</span><span class="hljs-params">()</span></span>&#123;<br>    ch:=<span class="hljs-built_in">make</span>(<span class="hljs-keyword">chan</span> <span class="hljs-keyword">int</span>)<br>    <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span>&#123;<br>        val:=&lt;-ch<br>        fmt.PrintIn(<span class="hljs-string">&quot;received a value:&quot;</span>,val)<br>    &#125;()<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">leak</span><span class="hljs-params">()</span></span>&#123;<br>    ch:=<span class="hljs-built_in">make</span>(<span class="hljs-keyword">chan</span> <span class="hljs-keyword">int</span>)<br>    <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span>&#123;<br>        val:=&lt;-ch<br>        fmt.PrintIn(<span class="hljs-string">&quot;received a value:&quot;</span>,val)<br>    &#125;()<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>函数退出后<code>goroutine</code>并不会退出，而且也不会接收到数据，处于一直被堵塞的状态，并且会占用资源，这就是常见的<code>goroutine</code>泄露(你以为它结束了，其实它没有)</p>
 <h1 id="准则"><a href="#准则" class="headerlink" title="准则"></a>准则</h1><blockquote>

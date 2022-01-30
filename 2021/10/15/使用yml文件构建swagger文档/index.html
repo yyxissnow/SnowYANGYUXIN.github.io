@@ -84,7 +84,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -202,7 +202,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      2.3k 字
     </span>
   
 
@@ -211,7 +211,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      20 分钟
     </span>
   
 
@@ -246,7 +246,7 @@
               <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>现在，在程序开发中前后端分离的模式已经成了主流，而在前后端分离的项目中，如果后端的开发人员能提供一份清晰明了的接口文档，那么对接的前端开发人员也会轻松很多，<strong>大大的提高了前后端沟通效率和开发速度</strong></p>
 <p><code>Swagger</code>可以用来定义和记录<code>RESTful Web</code>服务的接口文档，可以通过<strong>使用给接口代码添加申明式注释的方式</strong>、也可以<strong>使用yml文档格式</strong>来生成swagger渲染的前端接口文档界面</p>
 <p>下面来介绍第二种：使用<code>yml</code>文档格式的方式来生成<code>swagger</code>渲染接口文档，用的是<strong>OpenAPI 3</strong>的标准</p>
-<h1 id="yml文档规则"><a href="#yml文档规则" class="headerlink" title="yml文档规则"></a>yml文档规则</h1><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">openapi:</span> <span class="hljs-number">3.0</span><span class="hljs-number">.0</span> <span class="hljs-comment">#必填字段 指定swagger版本号</span><br><span class="hljs-attr">info:</span><br>  <span class="hljs-attr">description:</span> <span class="hljs-string">接口文档的总描述#接口文档描述</span><br>  <span class="hljs-attr">version:</span> <span class="hljs-string">&quot;1.1.0&quot;</span> <span class="hljs-comment">#文档版本</span><br>  <span class="hljs-attr">title:</span> <span class="hljs-string">test</span> <span class="hljs-string">服务</span> <span class="hljs-comment">#接口文档标题</span><br>  <span class="hljs-attr">contact:</span><br>    <span class="hljs-attr">email:</span> <span class="hljs-string">xxx@xxx.com</span> <span class="hljs-comment">#联系邮箱</span><br><span class="hljs-attr">servers:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">description:</span> <span class="hljs-string">这是接口文档的IP端口地址</span> <span class="hljs-comment">#地址的描述</span><br>    <span class="hljs-attr">url:</span> <span class="hljs-string">http://127.0.0.1:8080/</span> <span class="hljs-comment">#接口的IP端口地址</span><br><span class="hljs-attr">tags:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">服务接口组1</span><br>    <span class="hljs-attr">description:</span> <span class="hljs-string">这是接口组1的注释</span> <span class="hljs-comment">#给下面有相应标签的接口添加注释</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">用户</span><br>    <span class="hljs-attr">description:</span> <span class="hljs-string">这是接口用户组的注释</span><br></code></pre></td></tr></table></figure>
+<h1 id="yml文档规则"><a href="#yml文档规则" class="headerlink" title="yml文档规则"></a>yml文档规则</h1><figure class="highlight yaml"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></div></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">openapi:</span> <span class="hljs-number">3.0</span><span class="hljs-number">.0</span> <span class="hljs-comment">#必填字段 指定swagger版本号</span><br><span class="hljs-attr">info:</span><br>  <span class="hljs-attr">description:</span> <span class="hljs-string">接口文档的总描述#接口文档描述</span><br>  <span class="hljs-attr">version:</span> <span class="hljs-string">&quot;1.1.0&quot;</span> <span class="hljs-comment">#文档版本</span><br>  <span class="hljs-attr">title:</span> <span class="hljs-string">test</span> <span class="hljs-string">服务</span> <span class="hljs-comment">#接口文档标题</span><br>  <span class="hljs-attr">contact:</span><br>    <span class="hljs-attr">email:</span> <span class="hljs-string">xxx@xxx.com</span> <span class="hljs-comment">#联系邮箱</span><br><span class="hljs-attr">servers:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">description:</span> <span class="hljs-string">这是接口文档的IP端口地址</span> <span class="hljs-comment">#地址的描述</span><br>    <span class="hljs-attr">url:</span> <span class="hljs-string">http://127.0.0.1:8080/</span> <span class="hljs-comment">#接口的IP端口地址</span><br><span class="hljs-attr">tags:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">服务接口组1</span><br>    <span class="hljs-attr">description:</span> <span class="hljs-string">这是接口组1的注释</span> <span class="hljs-comment">#给下面有相应标签的接口添加注释</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">用户</span><br>    <span class="hljs-attr">description:</span> <span class="hljs-string">这是接口用户组的注释</span><br></code></pre></td></tr></table></figure>
 
 <p><img src="/img/%E4%BD%BF%E7%94%A8yml%E6%96%87%E4%BB%B6%E6%9E%84%E5%BB%BAswagger%E6%96%87%E6%A1%A3/image-20210827100343400.png" srcset="/img/loading.gif" lazyload alt="image-20210827100343400"></p>
 <p>​    </p>

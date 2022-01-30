@@ -83,7 +83,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -201,7 +201,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      3.3k 字
     </span>
   
 
@@ -210,7 +210,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      28 分钟
     </span>
   
 
@@ -257,13 +257,13 @@
 <blockquote>
 <p>创建容器之间的通信网络</p>
 </blockquote>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker network create docker_elk_test<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><pre><code class="hljs shell">docker network create docker_elk_test<br></code></pre></td></tr></table></figure>
 
 <p>​    </p>
 <blockquote>
 <p>拉取镜像</p>
 </blockquote>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">docker pull docker.elastic.co/elasticsearch/elasticsearch:7.3.0<br>docker pull docker.elastic.co/kibana/kibana:7.3.0<br>docker pull docker.elastic.co/logstash/logstash:7.3.0<br></code></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">docker</span> pull docker.elastic.co/elasticsearch/elasticsearch:<span class="hljs-number">7</span>.<span class="hljs-number">3</span>.<span class="hljs-number">0</span><br><span class="hljs-attribute">docker</span> pull docker.elastic.co/kibana/kibana:<span class="hljs-number">7</span>.<span class="hljs-number">3</span>.<span class="hljs-number">0</span><br><span class="hljs-attribute">docker</span> pull docker.elastic.co/logstash/logstash:<span class="hljs-number">7</span>.<span class="hljs-number">3</span>.<span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
 
 <p>​    </p>
 <h2 id="部署elasticsearch"><a href="#部署elasticsearch" class="headerlink" title="部署elasticsearch"></a>部署elasticsearch</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">创建配置文件，文件位置可有自己选择<br>mkdir /usr/elk/elastic<br>cd /usr/elk/elastic<br>vim elasticsearch.yml<br></code></pre></td></tr></table></figure>
@@ -274,7 +274,7 @@
 <p><strong>docker 部署</strong></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run -it -d --name es_test -e ES_JAVA_OPTS=&quot;-Xms256m -Xmx256m&quot; -p 9200:9200 -p 9300:9300 -v /usr/elk/elastic/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml --network docker_elk_test -e &quot;discovery.type=single-node&quot; docker.elastic.co/elasticsearch/elasticsearch:7.3.0<br></code></pre></td></tr></table></figure>
 
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs plaintext"># 指定jjvm运行参数 最大最小内存<br>-e ES_JAVA_OPTS=&quot;-Xms256m -Xmx256m&quot; <br># 指定通信网络<br>--network docker_elk_test<br># 指定单节点部署<br>-e &quot;discovery.type=single-node&quot;<br></code></pre></td></tr></table></figure>
+<figure class="highlight vala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs vala"><span class="hljs-meta"># 指定jjvm运行参数 最大最小内存</span><br>-e ES_JAVA_OPTS=<span class="hljs-string">&quot;-Xms256m -Xmx256m&quot;</span> <br><span class="hljs-meta"># 指定通信网络</span><br>--network docker_elk_test<br><span class="hljs-meta"># 指定单节点部署</span><br>-e <span class="hljs-string">&quot;discovery.type=single-node&quot;</span><br></code></pre></td></tr></table></figure>
 
 <p>启动后在本机上查看 <strong>localhost:9200</strong> </p>
 <p><img src="/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015092848637.png" srcset="/img/loading.gif" lazyload alt="image-20211015092848637"></p>

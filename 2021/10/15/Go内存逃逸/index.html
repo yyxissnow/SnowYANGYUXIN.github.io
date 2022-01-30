@@ -81,7 +81,7 @@
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>Fluid</strong>
+      <strong>Snow的博客</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -199,7 +199,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      undefined 字
+      2.7k 字
     </span>
   
 
@@ -208,7 +208,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      NaN 分钟
+      23 分钟
     </span>
   
 
@@ -241,7 +241,7 @@
             
             <div class="markdown-body">
               <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在优化公司之前实习生写的后端代码，在db层这里</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">CreateXxx</span><span class="hljs-params">(xx *model.Xxx)</span> <span class="hljs-title">error</span></span> &#123;<br>   <span class="hljs-keyword">return</span> db.Database.Create(&amp;xx).Error<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">CreateXxx</span><span class="hljs-params">(xx *model.Xxx)</span> <span class="hljs-title">error</span></span> &#123;<br>   <span class="hljs-keyword">return</span> db.Database.Create(&amp;xx).Error<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>当时觉得只是创建，则不需要传结构体指针，并且觉得传了指针后引起内存逃逸，增加GC压力，后续中总觉得是传指针可能不一定就会引发内存逃逸，则查阅了相关资料和自己之前做的笔记，对此情况做一个详细的说明</p>
 <h1 id="堆和栈"><a href="#堆和栈" class="headerlink" title="堆和栈"></a>堆和栈</h1><p>Go有两个地方可以分配内存：一个全局堆空间用来<strong>动态分配内存</strong> (<strong>new  make</strong>)，另一个是每个goroutine都有的自身栈空间(<strong>初始是2k</strong>)</p>
