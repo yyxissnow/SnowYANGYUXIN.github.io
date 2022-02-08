@@ -1,0 +1,657 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Snow">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文主要介绍了计算机网络传输层中的UDP和TCP协议">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络之传输层">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2022/02/08/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="本文主要介绍了计算机网络传输层中的UDP和TCP协议">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421105559761.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421111238096.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421112430143.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422163236382.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421124445875.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422163606481.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422164124039.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422165201150.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422171153920.png">
+<meta property="article:published_time" content="2022-02-08T02:06:35.876Z">
+<meta property="article:modified_time" content="2022-02-08T02:27:16.910Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="计算机网络">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://snowyangyuxin.github.io/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421105559761.png">
+  
+  
+  <title>计算机网络之传输层 - Snow的博客</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hint.css@2/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"snowyangyuxin.github.io","root":"/","version":"1.8.14","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Snow的博客</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg/lol_bg.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="计算机网络之传输层">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-02-08 10:06" pubdate>
+        2022年2月8日 上午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.1k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      18 分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">计算机网络之传输层</h1>
+            
+            <div class="markdown-body">
+              <h1 id="传输层"><a href="#传输层" class="headerlink" title="传输层"></a>传输层</h1><p><strong>端到端，进程与进程的通信</strong></p>
+<ul>
+<li>使用端口 (Port) 来标记不同的网络进程</li>
+<li>端口 (Port) 使用<strong>16比特位</strong>表示 (0~65535)</li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421105559761.png" srcset="/img/loading.gif" lazyload alt="image-20210421105559761"></p>
+<h2 id="UDP协议"><a href="#UDP协议" class="headerlink" title="UDP协议"></a>UDP协议</h2><ul>
+<li>UDP 用户数据报协议<ul>
+<li>数据报：应用层传输过来一个完整的数据</li>
+<li>对数据报不合并、不拆分</li>
+</ul>
+</li>
+<li>UDP是一个非常简单的协议</li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421111238096.png" srcset="/img/loading.gif" lazyload alt="image-20210421111238096"></p>
+<ul>
+<li><p>UDP 是<strong>无连接</strong>协议</p>
+</li>
+<li><p>UDP 不能保证可靠的交付数据</p>
+<p>因为UDP协议头部简单，且无连接想发就发，无法保证数据在网络中是否丢失</p>
+</li>
+<li><p>UDP 是面向报文传输的</p>
+<p>不会对报文做任何处理，而是直接塞进UDP的数据中发送出去</p>
+</li>
+<li><p>UDP没有<strong>拥塞控制</strong></p>
+<p>UDP不管网络是否拥塞都会尽量把数据发送出去</p>
+</li>
+<li><p>UDP的<strong>首部开销</strong>很小</p>
+</li>
+</ul>
+<h2 id="TCP协议"><a href="#TCP协议" class="headerlink" title="TCP协议"></a>TCP协议</h2><ul>
+<li>TCP 传输控制协议</li>
+<li>TCP协议是计算机网络中非常复杂的一个协议</li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421112430143.png" srcset="/img/loading.gif" lazyload alt="image-20210421112430143"></p>
+<ul>
+<li><p>TCP是<strong>面向连接</strong>的协议</p>
+</li>
+<li><p>TCP的一个连接有两端(点对点通信)</p>
+</li>
+<li><p>TCP<strong>提供可靠</strong>的传输服务</p>
+</li>
+<li><p>TCP协议提供<strong>全双工</strong>的通信</p>
+<p>两个连接都可以发送数据的接收数据</p>
+</li>
+<li><p>TCP是面向<strong>字节流</strong>的协议</p>
+<p>对应该层的数据进行<strong>拆分</strong>成一段一段的分别发送然后进行<strong>合并</strong></p>
+</li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422163236382.png" srcset="/img/loading.gif" lazyload alt="image-20210422163236382"></p>
+<h3 id="可靠传输"><a href="#可靠传输" class="headerlink" title="可靠传输"></a>可靠传输</h3><blockquote>
+<p><strong>可靠传输的基本原理</strong></p>
+</blockquote>
+<p>​    </p>
+<p><strong>停止等待协议</strong></p>
+<ul>
+<li><p>发送方给接收方发送消息1后停止，等待接收方发送确认消息后继续发送消息2</p>
+</li>
+<li><p>出现差错的情况：通过<strong>超时重传</strong>来保证可靠传输</p>
+<ul>
+<li>发送消息在路上丢失了</li>
+<li>确认消息在路上丢失了</li>
+<li>确认的消息很久才到</li>
+</ul>
+</li>
+<li><p><strong>超时定时器</strong>：每发送一个消息，都需要设置一个定时器</p>
+</li>
+<li><p>停止等待协议是最简单的可靠传输协议</p>
+</li>
+<li><p>停止等待协议对<strong>信道的利用率</strong>不高</p>
+</li>
+</ul>
+<p>​    </p>
+<p><strong>连续ARQ协议</strong></p>
+<ul>
+<li>ARQ ：自动重传请求</li>
+<li><strong>批量发送和确认</strong></li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210421124445875.png" srcset="/img/loading.gif" lazyload alt="image-20210421124445875"></p>
+<ul>
+<li><p>拥有<strong>滑动窗口</strong>，批量发送后收到确认再将窗口向前滑动继续发送窗口内的数据</p>
+</li>
+<li><p>并不需要对每一个报文都确认，而是采用<strong>累计确认</strong>的方法，比如接收到了5就代表前五个数据已收到，窗口向后滑动五个位置 (大大减少确认报文的数量以<strong>提升网络效率</strong>)</p>
+</li>
+</ul>
+<p>​    </p>
+<blockquote>
+<p><strong>TCP协议的可靠传输</strong></p>
+</blockquote>
+<ul>
+<li><p>TCP的可靠传输基于连续ARQ协议</p>
+</li>
+<li><p>TCP的滑动窗口是以字节为单位的</p>
+</li>
+<li><p>如果<strong>没有按序</strong>收到<strong>确认号</strong>，过超时时间(<strong>超时定时器</strong>)就会重传</p>
+<ul>
+<li><p>选择重传：选择重传指定需要重传的字节，是一个边界，是一个字节段 （比如TCP报文中的选项存了1000和1500表示重传1000到1500边界的字节）</p>
+</li>
+<li><p>每一个字节都有惟一的32位序号，TCP报文的序号也是指一个字节段</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="流量控制"><a href="#流量控制" class="headerlink" title="流量控制"></a>流量控制</h3><ul>
+<li><p>流量控制指让<strong>发送方发送速率不要太快</strong></p>
+</li>
+<li><p>流量控制是使用<strong>滑动窗口</strong>来实现的</p>
+<p>窗口指明允许对方发送的数据量</p>
+</li>
+<li><p>通过<strong>窗口大小</strong>控制对方发送速率</p>
+<ul>
+<li>在向发送方发送确认消息时可以<strong>指定窗口的大小</strong>(对方可以发送的数据大小)，如果指定为0发送方将等待</li>
+<li>如果在发送方等待，接收方发送窗口大小的消息时消息丢失，就会出现<strong>死锁</strong>的情况(发送方和接收方都在等待对方传消息)，这时需要<strong>坚持定时器</strong></li>
+</ul>
+</li>
+<li><p><strong>坚持定时器</strong></p>
+<ul>
+<li>当接收到窗口消息为0的消息，则启动<strong>坚持定时器</strong></li>
+<li>坚持定时器每隔一段时间发送一个<strong>窗口探测报文</strong></li>
+</ul>
+</li>
+</ul>
+<h3 id="拥塞控制"><a href="#拥塞控制" class="headerlink" title="拥塞控制"></a>拥塞控制</h3><p><strong>拥塞</strong></p>
+<ul>
+<li>一条数据链路经过非常多的设备</li>
+<li>数据链路层中各个部分都有可能成为网络传输的瓶颈</li>
+<li>网络对硬件设备的要求大于可用资源导致拥塞</li>
+</ul>
+<p>​    </p>
+<ul>
+<li>流量控制考虑的是<strong>点对点</strong>通信量的控制</li>
+<li>拥塞控制考虑<strong>整个网络</strong>，是全局性的考虑</li>
+</ul>
+<p>​    </p>
+<ul>
+<li>报文超时则认为是拥塞</li>
+</ul>
+<p>​    </p>
+<p><strong>慢启动算法</strong></p>
+<ul>
+<li><p>由小到大逐渐增加发送数据量（发送数据报文的数量）</p>
+</li>
+<li><p>每收到一个报文确认，就加一（1 2 4 8 16…）指数增长</p>
+</li>
+<li><p>当增长到<strong>慢启动阈值</strong>就不增长了，就会启动<strong>拥塞避免算法</strong></p>
+</li>
+</ul>
+<p>​    </p>
+<p><strong>拥塞避免算法</strong></p>
+<ul>
+<li>维护一个拥塞窗口</li>
+<li>只要网络不拥塞 (报文不超时)，就<strong>试探着</strong>拥塞窗口调大 (16 17 18…)</li>
+</ul>
+<p>​    </p>
+<p>TCP的拥塞控制还是尽可能结合自身考虑，只要网络不拥塞就尽可能发送更多的数据到网络中去，只要拥塞发生了就减少自己所发送的数据量，以降低网络中设备的压力</p>
+<h3 id="三次握手"><a href="#三次握手" class="headerlink" title="三次握手"></a>三次握手</h3><ul>
+<li>TCP标记：存在TCP报文中，占6位，每位各有不同含义<ul>
+<li><strong>ACK</strong> ：确认位，ACK=1。确认号才生效</li>
+<li><strong>SYN</strong>：同步位，SYN=1,表示连接请求报文</li>
+<li><strong>FIN</strong>：终止位，FIN=1，表示释放连接</li>
+</ul>
+</li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422163606481.png" srcset="/img/loading.gif" lazyload alt="image-20210422163606481"></p>
+<p><strong>seq</strong>：序列号</p>
+<p><strong>ack</strong>：确认号（ack=x+1 表示想要收到x+1的序列号的值）</p>
+<p>​    </p>
+<blockquote>
+<p>为什么发送方要发出第三个确认报文(为什么要进行三次握手)？</p>
+</blockquote>
+<ul>
+<li>避免<strong>已经失效的连接请求报文</strong>传送到对方，<strong>引起错误</strong></li>
+<li>如果第一次发送后发送方迟迟得不到回应就会发出第二次请求<ul>
+<li>如果只有两次握手，在重新发的请求确认握手后，后来到的发送请求会再次建立连接，引发错误(如果客户端已经连接超时失败，放弃连接了。这个时候超时的信号又到了服务端，服务第二次握手，认为建立了连接，服务器资源就被浪费了)</li>
+<li>三次握手中，第二次到达的报文发出第三次请求后，就会忽略后到的请求</li>
+</ul>
+</li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422164124039.png" srcset="/img/loading.gif" lazyload alt="image-20210422164124039"></p>
+<h3 id="四次挥手"><a href="#四次挥手" class="headerlink" title="四次挥手"></a>四次挥手</h3><p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422165201150.png" srcset="/img/loading.gif" lazyload alt="image-20210422165201150"></p>
+<ul>
+<li>发送方发出请求断开的报文后，接收方回应受到请求，此时发送方以不能发送报文了，<strong>但接收方还可以继续发送报文</strong>，待接收方信息发送完成后给发送方发送消息表示消息已经发送完成</li>
+</ul>
+<p>​    </p>
+<p><strong>等待计时器</strong></p>
+<ul>
+<li><p>等待<strong>2MSL</strong>的时间</p>
+<p>MSL：最长报文段寿命</p>
+<p>MSL建议设置为<strong>2分钟</strong></p>
+<ul>
+<li>为什么要等待<strong>2MSL</strong>？<ul>
+<li>最后一个报文是没有确认的</li>
+<li>确保发送方的<strong>ACK</strong>可以到到接收方</li>
+<li>2MSL时间内没有收到，则接收方会重发，重复第三次挥手的动作</li>
+<li>确保当前连接的所有报文都已经过期</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>只有在等待计时器结束后才会释放端口</p>
+</li>
+</ul>
+<h2 id="套接字与套接字编程"><a href="#套接字与套接字编程" class="headerlink" title="套接字与套接字编程"></a><strong>套接字与套接字编程</strong></h2><p>IP与端口的组合（ <strong>IP:Port</strong> ）又称为套接字</p>
+<ul>
+<li><p>套接字(<strong>Socket</strong>)是抽象概念，表示TCP连接的一端</p>
+</li>
+<li><p>通过套接字可以进行数据发送或接收</p>
+</li>
+<li><p>两个套接字既可以确认一条TCP的连接 <strong>IP:Port ↔ IP:Port</strong></p>
+<p><strong>TCP连接由两个套接字组成   CS架构</strong></p>
+</li>
+</ul>
+<p><img src="/img/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%BC%A0%E8%BE%93%E5%B1%82/image-20210422171153920.png" srcset="/img/loading.gif" lazyload alt="image-20210422171153920"></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/02/07/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E6%8F%92%E5%85%A5&amp;%E9%80%89%E6%8B%A9&amp;%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F/">
+                        <span class="hidden-mobile">算法排序之选择、插入、归并排序</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+        typing(title);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
