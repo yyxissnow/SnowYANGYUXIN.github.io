@@ -26,13 +26,13 @@
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220208215830761.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220208170041071.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209102953725.png">
-<meta property="og:image" content="https://snowyangyuxin.github.io/2022/02/08/Go_GC%E5%8E%9F%E7%90%86/img/Go_GC%E5%8E%9F%E7%90%86/image-20210504193401144.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20210504193401144.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209110713126.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209113153150.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209113007090.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209113513568.png">
 <meta property="article:published_time" content="2022-02-08T13:43:01.996Z">
-<meta property="article:modified_time" content="2022-02-09T06:18:13.700Z">
+<meta property="article:modified_time" content="2022-02-09T06:19:17.984Z">
 <meta property="article:author" content="Snow">
 <meta property="article:tag" content="Golang">
 <meta name="twitter:card" content="summary_large_image">
@@ -396,7 +396,7 @@
 <li><strong>强三色不变性</strong>：黑色对象不会指向白色对象，只会指向灰色对象或者黑色对象</li>
 <li><strong>弱三色不变性</strong>：黑色对象指向的白色对象必须包含一条灰色对象经由多个白色对象的可达路经(因黑色对象不会被扫描了，而有灰色对象指向白色，则白色对象还有机会被扫描)</li>
 </ul>
-<p><img src="img/Go_GC%E5%8E%9F%E7%90%86/image-20210504193401144.png" srcset="/img/loading.gif" lazyload alt="image-20210504193401144"></p>
+<p><img src="/img/Go_GC%E5%8E%9F%E7%90%86/image-20210504193401144.png" srcset="/img/loading.gif" lazyload alt="image-20210504193401144"></p>
 <p>如图，如果e被或破坏了(B.e=nil)，则白色对象c必然会被视为垃圾，出现对象丢失的现象。如果这个白色对象下游还引用了其他对象，并且这条路径还是指向下游的唯一路径，那么他们也是必死无疑的</p>
 <p>为了防止这种现象的产生，最简单的方法就是STW，直接禁止其他用户程序对对象引用关系的干扰，但是STW的过程有明显的资源浪费现象，对所有的用户程序都有很大的影响，则如何在保证对象不丢失的情况下尽可能的提高GC效率，减少STW时间呢？</p>
 <p>​    </p>
