@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209113007090.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209113513568.png">
 <meta property="article:published_time" content="2022-02-08T13:43:01.996Z">
-<meta property="article:modified_time" content="2022-02-09T06:11:20.809Z">
+<meta property="article:modified_time" content="2022-02-09T06:17:38.602Z">
 <meta property="article:author" content="Snow">
 <meta property="article:tag" content="Golang">
 <meta name="twitter:card" content="summary_large_image">
@@ -313,7 +313,7 @@
 </ul>
 </li>
 <li>分代收集（Java）<ul>
-<li>按照生命周期进行划分不同的代空间，生命周期长的放入老年代，短的放入新生代，新生代的回收频率高于老年 代的频率</li>
+<li>按照生命周期进行划分不同的代空间，生命周期长的放入老年代，短的放入新生代，新生代的回收频率高于老年代的频率</li>
 </ul>
 </li>
 </ul>
@@ -325,6 +325,7 @@
 <p>这个阶段的第一步，是抢占所有正在运行的goroutine，被抢占之后，这些goroutine会被悬停在一个相对安全的状态</p>
 <p>处理器P(无论是正在运行的处理器还是已在idle列表中的处理器)，都会被标记成停止状态(stopped)，不再运行任何代码。调度器把每个处理的M从各自对应的处理器P分离出来，放到idle(M的休闲列表)列表中去</p>
 <p>对于Goroutine本身，它们会被放到一个全局队列中等待</p>
+<p>​    </p>
 <blockquote>
 <p>Root</p>
 </blockquote>
@@ -337,6 +338,7 @@
 <li>Start the Wrold</li>
 </ul>
 <p>这个算法最大的问是GC执行期间需要把整个程序完全暂停，朴素的Mark Sweep是整体STW，并且分配速度慢，内存碎片高</p>
+<p>​    </p>
 <p>在Go1.1是全局阶段STW，可能是秒级，Go1.3是标记过程要STW，因为对象引用关系如个人在标记阶段做了修改，会影响标记结果的正确性</p>
 <p><strong>并发GC</strong>分为两层含义：</p>
 <ul>
@@ -358,6 +360,7 @@
 <li>黑色对象：活跃对象，包括不存在任何引用外部指针的对象以及从根对象可达的对象，垃圾回收器不会扫描这些对象的子对象</li>
 <li>灰色对象：潜在活跃对象，因为可能存在指向白色对象的外部指针，垃圾回收器会扫描这些对象的子对象</li>
 </ul>
+<p>​    </p>
 <blockquote>
 <p>工作流程</p>
 </blockquote>
@@ -372,6 +375,7 @@
 <li>Sweep：按照标记结果回收所有的白色对象，该过程后台并行执行</li>
 <li>Sweep Termination：对未清扫的 span 进行清扫, 只有上一轮的 GC 的清扫工作完成才可以开始新一轮的 GC</li>
 </ul>
+<p>​    </p>
 <blockquote>
 <p>三色标记</p>
 </blockquote>
@@ -394,6 +398,7 @@
 <p><img src="img/Go_GC%E5%8E%9F%E7%90%86/image-20210504193401144.png" srcset="/img/loading.gif" lazyload alt="image-20210504193401144"></p>
 <p>如图，如果e被或破坏了(B.e=nil)，则白色对象c必然会被视为垃圾，出现对象丢失的现象。如果这个白色对象下游还引用了其他对象，并且这条路径还是指向下游的唯一路径，那么他们也是必死无疑的</p>
 <p>为了防止这种现象的产生，最简单的方法就是STW，直接禁止其他用户程序对对象引用关系的干扰，但是STW的过程有明显的资源浪费现象，对所有的用户程序都有很大的影响，则如何在保证对象不丢失的情况下尽可能的提高GC效率，减少STW时间呢？</p>
+<p>​    </p>
 <blockquote>
 <p><strong>Write Barrier - Dijkstra 插入写屏障</strong></p>
 </blockquote>
@@ -406,10 +411,12 @@
 <li>按照标记结果回收所有白色对象，该过程后台并发执行</li>
 </ul>
 <p><img src="/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209110713126.png" srcset="/img/loading.gif" lazyload alt="image-20220209110713126"></p>
+<p>​    </p>
 <blockquote>
 <p><strong>Write Barrier - Yuasa 删除写屏障</strong></p>
 </blockquote>
 <p>删除屏障也是拦截写操作的，但是是<strong>通过保护灰色对象到白色独享的路径不会断实现的，如果发生路径断裂则将白色对象标记为灰色对象</strong>。如上图中，删除指针e时将对象C标记为灰色，这样C下游的所有白色对象，即使会被黑色对象引用，最终也还是会被扫描标记的，满足了弱三色不变式。这种方式的回收精度低，一个对象即使被删除了最后一个指向它的指针也依旧可以活过这一轮，只能在下一轮GC中被清理掉</p>
+<p>​    </p>
 <blockquote>
 <p><strong>Write Barrier - 混合写屏障</strong></p>
 </blockquote>
@@ -421,6 +428,7 @@
 <p>为了移除占上的重扫描过程，除了引入混合屏障之外，在垃圾收集的标记阶段，我们还需要将创建的所有新对象都标记成黑色（留给下一轮GC），防止新分配的栈内存和堆内存中的对象被错误的回收，因为栈内存在标记阶段最终都会变为黑色，所以不需要重新扫描空间</p>
 <h3 id="Sweep"><a href="#Sweep" class="headerlink" title="Sweep"></a>Sweep</h3><p>Sweep让Go知道哪些内存可以重新分配使用，然而，Sweep过程不会处理释放的对象内存置为0，而是在分配重新使用的时候，重新reset bit (取的时候才reset)</p>
 <p>每一个span内有一个<code>bitmap allocBits</code>，它表示上一次GC之后每一个object的分配情况，1表示已分配，0表示未使用或释放</p>
+<p>​    </p>
 <p>GC将会启动去释放不再被使用的内存。在标记期间，GC会用一个位图<code>gcmarkBits</code>来跟踪在使用中的内存(黑色标记为0，白色标记为1)</p>
 <p>正在被使用的内存被标记为黑色，然后当前执行并不能够达到的那些内存会被保持为白色</p>
 <p>现在，我们可以使用<code>gcmarkBits</code>精确查看可用于分配的内存。<strong>Go使用gcmarkBits赋值allocBits(覆盖)，这个操作就是内存清理</strong></p>
@@ -434,6 +442,7 @@
 <p>当应用程序goroutine尝试在堆内存中分配新内存时，会触发该操作。清理导致的延迟和吞吐量降低被分散到每次内存分配时</p>
 </li>
 </ul>
+<p>​    </p>
 <p>清理内存阶段的第二种方式是即时执行，但是，由于这些内存已经被分发到每一个处理器P的本地缓存<code>mcache</code>中，因此很难追踪首先清理哪些内存。这就是为什么Go首先将所有内存段移动到<code>mcentral</code>的原因。然后，它会让本地缓存mcache再次请求它们，去即时清理</p>
 <p><img src="/img/Go_GC%E5%8E%9F%E7%90%86/image-20220209113513568.png" srcset="/img/loading.gif" lazyload alt="image-20220209113513568"></p>
 <p>即时扫描确保所有内存段都会得到清理(节省资源)，同时不会阻塞程序执行</p>
