@@ -24,7 +24,7 @@
 <meta property="og:description" content="Go中使用Docker安装Redis，使用评论功能对Redis的操作进行演示">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-09-03T11:17:26.000Z">
-<meta property="article:modified_time" content="2021-09-03T11:17:26.000Z">
+<meta property="article:modified_time" content="2022-02-11T09:06:09.542Z">
 <meta property="article:author" content="Snow">
 <meta property="article:tag" content="Golang">
 <meta property="article:tag" content="星辰缘">
@@ -198,7 +198,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      3.3k 字
+      3.4k 字
     </span>
   
 
@@ -207,7 +207,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      28 分钟
+      29 分钟
     </span>
   
 
@@ -260,6 +260,10 @@
 
 <p><strong>命令解释</strong></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run redis # 从redis镜像运行容器<br>-p 6379:6379 # 映射本地6379端口到容器6379端口，前为本地端口<br>--name redis # 设置容器名称为redis，方便以后使用docker ps进行管理<br>-v /data/redis/redis.conf:/etc/redis/redis.conf # 关联本地/data/redis/redis.conf文件到容器中/etc/redis/redis.conf，同样，前为本地<br>-v /data/redis/data:/data # 关联本地/docker/redis/data到容器内/data目录，此为存放redis数据的目录，为方便以后升级redis，而数据可以留存<br>-d # 后台启动，使用此方式启动，则redis.conf中daemonize必须设置为no，否则会无法启动<br>redis-server /etc/redis/redis.conf # 在容器内启动redis-server的命令，主要是为了加载配置<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p><strong>容器内部使用redis</strong></p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs awk">docker exec -it redis_container <span class="hljs-regexp">/bin/</span>sh<br>cd <span class="hljs-regexp">/usr/</span>local/bin<br>redis-cli<br></code></pre></td></tr></table></figure>
 
 
 

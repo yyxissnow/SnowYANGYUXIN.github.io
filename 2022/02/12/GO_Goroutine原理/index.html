@@ -1,0 +1,592 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Snow">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文详细介绍了Go的GMP调度模型和调度过程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go Goroutine原理">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2022/02/12/GO_Goroutine%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="本文详细介绍了Go的GMP调度模型和调度过程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207154421068.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207160101624.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207162324065.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207163522414.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220212151314201.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20210418211549894.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20210825111837265.png">
+<meta property="article:published_time" content="2022-02-12T05:58:07.975Z">
+<meta property="article:modified_time" content="2022-02-12T07:54:36.484Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://snowyangyuxin.github.io/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207154421068.png">
+  
+  
+  <title>Go Goroutine原理 - Snow的博客</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hint.css@2/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"snowyangyuxin.github.io","root":"/","version":"1.8.14","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Snow的博客</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg/lol_bg.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="Go Goroutine原理">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-02-12 13:58" pubdate>
+        2022年2月12日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      3.5k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      30 分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Go Goroutine原理</h1>
+            
+            <div class="markdown-body">
+              <h2 id="线程调度"><a href="#线程调度" class="headerlink" title="线程调度"></a>线程调度</h2><ul>
+<li>进程：资源分配的基本单位</li>
+<li>线程：调度的基本单位</li>
+<li>无论是在线程还是进程，在Linux都是task_struct描述，从内核角度来看，与进程无本质区别</li>
+</ul>
+<p><img src="/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207154421068.png" srcset="/img/loading.gif" lazyload alt="image-20220207154421068"></p>
+<p><strong>Liunx中创建线程就相当于是创建进程，只不过内存、文件等信息进行共享</strong></p>
+<p>​    </p>
+<blockquote>
+<p>Linux进程的内存使用</p>
+</blockquote>
+<p><img src="/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207160101624.png" srcset="/img/loading.gif" lazyload alt="image-20220207160101624"></p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><pre><code class="hljs arduino">size file_name <span class="hljs-comment">//查看目标文件的内存使用情况</span><br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>为何栈向下生长，堆向上生长</p>
+</blockquote>
+<p>每一个可执行可编译程序，从低地址到高地址依次是：text、data、bss、堆、栈、环境参数变量；其中堆和栈之间有很大的地址空间空闲着，在需要分配空间的时候，堆向上涨，栈往下涨</p>
+<p>这样设计可以使得堆和栈能够充分利用空闲的地址空间，一个向上涨，一个向下涨，这样它们就可以<strong>最大程度地共用这块剩余的地址空间，达到利用率的最大化</strong></p>
+<p>​    </p>
+<blockquote>
+<p>CPU对内存的访问</p>
+</blockquote>
+<p><img src="/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207162324065.png" srcset="/img/loading.gif" lazyload alt="image-20220207162324065"></p>
+<p>这样就进行的内存交换（通过查页表找映射关系），将磁盘上的虚拟内存交换到物理内存上</p>
+<h3 id="进程和线程切换的区别"><a href="#进程和线程切换的区别" class="headerlink" title="进程和线程切换的区别"></a>进程和线程切换的区别</h3><blockquote>
+<p>进程切换开销</p>
+</blockquote>
+<ul>
+<li>直接开销<ul>
+<li>切换页表全局目录（PGD）</li>
+<li>切换内核态堆栈</li>
+<li>切换硬件上下文（进程恢复前，必须装入寄存器的数据统称为硬件上下文）</li>
+<li>刷新 TLB</li>
+<li>系统调度器的代码执行</li>
+</ul>
+</li>
+<li>间接开销<ul>
+<li>CPU 缓存失效导致的进程需要到内存直接访问的 IO 操作变多</li>
+</ul>
+</li>
+</ul>
+<p>​    </p>
+<blockquote>
+<p>线程切换开销</p>
+</blockquote>
+<ul>
+<li>线程本质上只是一批共享资源的进程，线程切换本质上依然需要内核进行进程切换</li>
+<li>一组线程因为共享内存资源，因此一个进程的所有线程共享虚拟地址空间，线程切换相比进程切换，<strong>主要节省了虚拟地址空间的切换</strong></li>
+</ul>
+<p>​    </p>
+<blockquote>
+<p><strong>用户线程</strong></p>
+</blockquote>
+<p><strong>无需内核帮助，应用程序在用户空间创建的可执行单元，创建销毁完全在用户态完成</strong></p>
+<p><img src="/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220207163522414.png" srcset="/img/loading.gif" lazyload alt="image-20220207163522414"></p>
+<p>在程序的层面一次执行，<strong>无需通过系统调用的方式进行切换</strong>，一旦拿到时间片就尽可能的使用，减少对系统调用的依赖</p>
+<h2 id="Goroutine原理"><a href="#Goroutine原理" class="headerlink" title="Goroutine原理"></a>Goroutine原理</h2><p><strong>Go 语言基于 GMP 模型实现用户态线程</strong></p>
+<h3 id="goroutine和线程的区别"><a href="#goroutine和线程的区别" class="headerlink" title="goroutine和线程的区别"></a><strong>goroutine和线程的区别</strong></h3><ul>
+<li><p><strong>内存占用</strong></p>
+<p>创建一个<strong>goroutine</strong>的栈内存消耗为<strong>2KB</strong>，运行过程中，如果栈空间不够，会<strong>自动扩容</strong></p>
+<p>创建一个<strong>thread</strong>为了避免极端情况下操作系统线程栈的溢出，默认会为其分配一个较大的栈内存(<strong>1-8MB</strong>),而且还需要一个被称为“<strong>guard page</strong>”的区域用于和其他thread的<strong>栈空间进行隔离</strong>（防止线程1因为栈溢出后污染了相邻的线程2，因为地址空间是相连的）。而栈内存空间一旦创建和初始化完成之后其大小就不能再有变化，这决定了在某些特殊场景下系统线程栈还是有益处的风险</p>
+</li>
+<li><p><strong>创建/销毁</strong></p>
+<p><strong>线程</strong>创建和销毁都会有巨大的消耗，是<strong>内核级</strong>的交互，而进入内核所消耗的性能代价比较高，开销较大</p>
+<p>goroutine是<strong>用户态</strong>线程，是由goroutine管理，创建和销毁的消耗非常小</p>
+</li>
+</ul>
+<p>​        <a target="_blank" rel="noopener" href="https://blog.csdn.net/youngyoungla/article/details/53106671?utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-2.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-2.control">用户态和内核态</a></p>
+<ul>
+<li><p><strong>调度切换</strong></p>
+<p>​    抛开陷入内核，线程切换会消耗1000-1500纳秒（<strong>上下文保存成本高</strong>，较多寄存器，公平性，复杂时间计算统计），一个纳秒平均可以执行12-18条指令</p>
+<p>​    所以由于线程切换，执行指令的条数会减少12000-18000。goroutine的切换约为200ns（用户态，3个寄存器），相当于2400-3600条指令。因此，goroutine切换成本比thread小得多</p>
+</li>
+<li><p><strong>复杂性</strong></p>
+<p>​    线程的创建和退出复杂,多个thread间通讯复杂（share memory）</p>
+<p>​    不能大量创建线程，成本高，使用网络多路复用，存在大量callback。对于应用服务线程门槛高，例如需要做第三方库隔离，需要考虑引入线程池等</p>
+</li>
+</ul>
+<h3 id="GMP调度模型"><a href="#GMP调度模型" class="headerlink" title="GMP调度模型"></a>GMP调度模型</h3><ul>
+<li><p><strong>G</strong>：goroutine的缩写，每次go func( )都代表一个G，无限制</p>
+<p>每个 goroutine 都有自己的栈空间， 定时器，初始化的栈空间在 2k 左右，空间会随着需求增长</p>
+</li>
+<li><p><strong>M</strong>：工作线程(OS thread)也被称为Machine，使用struct runtime.m，所有M是有线程栈的</p>
+<p>抽象化代表内核线程，记录内核线程栈信息，当 goroutine 调度到线程时，使用该 goroutine 自己的栈信息</p>
+</li>
+<li><p><strong>P</strong>：“Processor” 代表调度器，负责调度 goroutine，维护一个本地 goroutine 队列，M 从 P 上获得 goroutine 并执行，同时还负责部分内存的管理</p>
+<p>它代表了M所需要的上下文环境，也是处理用户级代码逻辑的处理器，它负责衔接M和G的调度上下文(<strong>相当于一个队列，不停的从里面捞G来执行</strong>)，将等待执行的G与M对接，当P有任务时需要创建或者唤醒一个M来执行它队列里的任务。所以P/M需要进行绑定，构成一个执行单元</p>
+<p><img src="/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20220212151314201.png" srcset="/img/loading.gif" lazyload alt="image-20220212151314201"></p>
+</li>
+</ul>
+<p>​    </p>
+<p>P决定了并行任务的数量，可通过 <code>runtime.GOMAXPROCS</code> 来设定。在GO1.5之后 <code>GOMAXPROCS</code> 被默认设置CPU数量，而之前则默认是1</p>
+<p>其中<strong>G相当于是用户线程，M相当于是内核线程数量，是可以大于P的(上限10000)，建立的P(上限是256)是和CPU数量是对应的</strong></p>
+<p>这样做的目的是M可能陷入系统调用，而系统调用可能是阻塞的，比如磁盘读取，这个时候CPU是空闲的，创建新的M与P关联，可以让更多的G被调度，充分利用CPU</p>
+<p><img src="/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20210418211549894.png" srcset="/img/loading.gif" lazyload alt="image-20210418211549894"></p>
+<h3 id="调度"><a href="#调度" class="headerlink" title="调度"></a>调度</h3><p><strong>Go的调度本质上就是一个生成—消费模型，将消息写入队列再从队列中取出消息</strong></p>
+<blockquote>
+<p>gouroutine生产端</p>
+</blockquote>
+<p>有三个队列，优先级最高的是<strong>runnext(只能存一个值的队列，最快)</strong></p>
+<p>其次就是local queue(<strong>数组，限制了大小（256），本地用数组访问的快，局部性原理，新来的优先级一定比老的高</strong>) 和global queue(链表，无限扩张)</p>
+<p>​    </p>
+<p><em>每次启动一个goroutine就现将任务放入runnext，如果runnext满了就将runnext原来的task踢到local queue中(<strong>默认新进来的goroutine优先级最高，最先处理</strong>)，如果runnext和local queue都满了，就将原来runnext中的task和local queue中一半的task拿出来拼成一个链表存到global queue</em></p>
+<p><img src="/img/GO_Goroutine%E5%8E%9F%E7%90%86/image-20210825111837265.png" srcset="/img/loading.gif" lazyload alt="image-20210825111837265"></p>
+<p>​    </p>
+<blockquote>
+<p>goroutine消费端</p>
+</blockquote>
+<p>M执行循环调度，必须与一个P绑定</p>
+<p>在local中 (优先在runnext中拿) 执行<strong>60</strong>次(先去本地队列里捞，就可以<strong>减少使用全局队列的锁，提高吞吐量</strong>。再去全局队列里捞，因为用全局队列会上锁)，就要去global (要加锁) 中执行<strong>1</strong>次(最多拿本地队列一半长度的goroutine)，还是没有就<strong>work-stealing</strong> (去其他队列里拿任务，拿一半)，如果还是没有就进入休眠状态</p>
+<h3 id="work-stealing"><a href="#work-stealing" class="headerlink" title="work-stealing"></a><strong>work-stealing</strong></h3><p>M绑定的P没有可执行的goroutine时它会去按照优先级去抢占任务</p>
+<p>先<strong>1/61的时间</strong>去<strong>全局队列</strong>里找 (<strong>防止全局队列里饥饿</strong>)，然后去<strong>本地队列</strong>找，然后去<strong>其他M</strong>里找 (<strong>防止本地队列里饥饿</strong>)</p>
+<p>找到任何一各任务，切换调用栈执行任务，再循环不断的获取任务，直到进入休眠</p>
+<p>其核心思想就是<strong>避免饥饿</strong> (其他进程都有事做，自己没有事做)</p>
+<p>​    </p>
+<p>为了保证公平性，从<strong>随机位置上的P</strong>开始，而且<strong>遍历的顺序也随机化</strong>了（选择一个小于GOMAXPROCS，且和它<strong>互为质数</strong>的步长），保证遍历的顺序也随机化了</p>
+<p>​    </p>
+<blockquote>
+<p><strong>Spining thread</strong></p>
+</blockquote>
+<p>线程自旋是相对于<strong>线程阻塞</strong>而言的，表象就是循环执行一个指定逻辑（就是上面提到的逻辑，目的是<strong>不停的寻找G</strong>）。这样做的问题显而易见，如果G迟迟不来，CPU会白白浪费性能在这无意义的计算上。但好处也很明显，降低了M的上下文切换成本(不断睡眠和唤醒是需要消耗成本的），<strong>提高了性能</strong></p>
+<ul>
+<li>M带P的找G执行</li>
+<li>M不带P的找P挂载</li>
+<li>G创建有没spiningM唤醒一个M</li>
+</ul>
+<p>Go的设计者倾向于高性能的并发表现选择了后者。当然前面也提到过，为了避免浪费过多的资源，自旋的线程数不会超过GOMAXPROCS，这是因为一个P在同一时刻只能绑定一个M，P的数量不会超过GOMAXPROCS，自然被绑定的M的数量也不会超过。对于未绑定的游离态的M，会进入休眠状态阻塞</p>
+<p>​    </p>
+<blockquote>
+<p><strong>Syscall</strong></p>
+</blockquote>
+<p>Go有自己封装的<strong>syscall(系统调用）</strong>，也就是进入和退出syscall的时候执行entersyscall/exitsyscall，也只有封装了系统调用才有可能触发重新调度，它将改变P的状态为syscall</p>
+<ul>
+<li><p>系统监视器 (system  monitor)，称为sysmon，会定时扫描，在执行系统调用时，如果某个P的G执行超过了一个sysmon tick，就会脱离M</p>
+</li>
+<li><p>P和M脱离后目前在idle list中等待被绑定。而syscall结束后M按照如下规则执行直到满足其中一个条件</p>
+<ul>
+<li>尝试获取同一个P，恢复执行G</li>
+<li>尝试获取idle list中空闲P</li>
+<li>把G放回global queue，M放回idle list</li>
+</ul>
+</li>
+</ul>
+<p>​    </p>
+<blockquote>
+<p><strong>Sysmon</strong></p>
+</blockquote>
+<p><strong>Go1.4后的异步抢占</strong>，注册sigurg信号，通过sysmon检测，对M对应的线程(<strong>运行超过10ms</strong>)发送信号，触发注册的handler，它往当前G的PC中插入一条指令(调用某个方法)，<strong>暂停</strong>当前goroutine，在处理完handler，G恢复后，自己把自己推到global queue中</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Golang/">Golang</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/02/08/Go_GC%E5%8E%9F%E7%90%86/">
+                        <span class="hidden-mobile">Go GC原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+        typing(title);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
