@@ -19,14 +19,14 @@
     <meta name="description" content="使用Go实现选择、插入、冒泡和归并排序并进行优化">
 <meta property="og:type" content="article">
 <meta property="og:title" content="算法排序之选择、插入、冒泡、归并排序">
-<meta property="og:url" content="https://snowyangyuxin.github.io/2022/02/07/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E6%8F%92%E5%85%A5&%E9%80%89%E6%8B%A9&%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F/index.html">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2022/02/07/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E6%8F%92%E5%85%A5&%E9%80%89%E6%8B%A9&%E5%86%92%E6%B3%A1&%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F/index.html">
 <meta property="og:site_name" content="Snow的博客">
 <meta property="og:description" content="使用Go实现选择、插入、冒泡和归并排序并进行优化">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E6%8F%92%E5%85%A5&%E9%80%89%E6%8B%A9&%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F/image-20210316210749343.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E6%8F%92%E5%85%A5&%E9%80%89%E6%8B%A9&%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F/image-20210316212030686.png">
 <meta property="article:published_time" content="2022-02-07T06:13:05.585Z">
-<meta property="article:modified_time" content="2022-02-08T07:47:53.307Z">
+<meta property="article:modified_time" content="2022-02-17T10:06:26.418Z">
 <meta property="article:author" content="Snow">
 <meta property="article:tag" content="Golang">
 <meta property="article:tag" content="排序">
@@ -201,7 +201,7 @@
   
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      4.5k 字
+      4.6k 字
     </span>
   
 
@@ -210,7 +210,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      38 分钟
+      39 分钟
     </span>
   
 
@@ -258,7 +258,7 @@
 
 
 
-<h3 id="再优化"><a href="#再优化" class="headerlink" title="再优化"></a><strong>再优化</strong></h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InsertionSort2</span><span class="hljs-params">(arr []<span class="hljs-keyword">int</span>)</span></span> &#123;<br>   <span class="hljs-keyword">for</span> i := <span class="hljs-number">1</span>; i &lt; <span class="hljs-built_in">len</span>(arr); i++ &#123;<br>      <span class="hljs-comment">//交换元素优化为赋值元素 交换可看成是三次赋值</span><br>      <span class="hljs-keyword">var</span> j <span class="hljs-keyword">int</span><br>      num := arr[i]<br>      <span class="hljs-keyword">for</span> j = i; j<span class="hljs-number">-1</span> &gt;= <span class="hljs-number">0</span> &amp;&amp; arr[j<span class="hljs-number">-1</span>] &gt; num; j-- &#123;<br>         arr[j] = arr[j<span class="hljs-number">-1</span>]<br>      &#125;<br>      arr[j]=num<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="再优化"><a href="#再优化" class="headerlink" title="再优化"></a><strong>再优化</strong></h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InsertionSort2</span><span class="hljs-params">(arr []<span class="hljs-keyword">int</span>)</span></span> &#123;<br>   <span class="hljs-keyword">for</span> i := <span class="hljs-number">1</span>; i &lt; <span class="hljs-built_in">len</span>(arr); i++ &#123;<br>      <span class="hljs-comment">//交换元素优化为赋值元素 交换可看成是三次赋值</span><br>      <span class="hljs-keyword">var</span> j <span class="hljs-keyword">int</span><br>      num := arr[i]<br>      <span class="hljs-keyword">for</span> j = i; j<span class="hljs-number">-1</span> &gt;= <span class="hljs-number">0</span> &amp;&amp; arr[j<span class="hljs-number">-1</span>] &gt; num; j-- &#123; <br>         arr[j] = arr[j<span class="hljs-number">-1</span>] <span class="hljs-comment">//每次覆盖前j前面的数字已经全部有序，只是将j插入到前面有序数组相应的位置，所以才能直接用前一个数覆盖后一个数，当遇到不能覆盖的位置时，此时再将之前保留的num放在该位置上</span><br>      &#125;<br>      arr[j]=num<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 
 
@@ -428,7 +428,7 @@
               <span style="visibility: hidden; width: 0">|</span>
               <img src="/img/beian/beian.jpg" srcset="/img/loading.gif" lazyload alt="police-icon"/>
             
-            <span>蜀ICP备2021020213号-1</span>
+            <span>蜀ICP备2021020213号</span>
           </a>
         </span>
       
