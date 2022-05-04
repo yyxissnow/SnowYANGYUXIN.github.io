@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Go_Mock/image-20220504111610258.png">
 <meta property="article:published_time" content="2021-02-08T01:19:29.000Z">
-<meta property="article:modified_time" content="2022-05-04T07:27:30.176Z">
+<meta property="article:modified_time" content="2022-05-04T07:31:49.476Z">
 <meta property="article:author" content="Snow">
 <meta property="article:tag" content="Golang">
 <meta property="article:tag" content="Test">
@@ -244,7 +244,7 @@
               <h2 id="什么是gomock"><a href="#什么是gomock" class="headerlink" title="什么是gomock"></a>什么是gomock</h2><p>gomock是Go官方提供的<strong>mock框架</strong>，提供打桩stub和验证调用的功能，它能对代码中的<strong>接口类型</strong>进行mock，方便编写<strong>单元测试</strong></p>
 <p>mockgen工具用于针对<strong>接口</strong>生成mock对象代码（不能mock单独的函数或方法，必须是接口）</p>
 <p>gomock通过<code>mockgen</code>命令生成包含mock对象的 .go 文件，生成的mock对象<strong>具备mock+stub</strong>的强大功能</p>
-<h2 id="安装和使用mockgen"><a href="#安装和使用mockgen" class="headerlink" title="安装和使用mockgen"></a>安装和使用mockgen</h2><figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">go</span> get github.com/golang/mock/gomock<br><span class="hljs-keyword">go</span> insatll github.com/golang/mock/mockgen<br></code></pre></td></tr></table></figure>
+<h2 id="安装和使用mockgen"><a href="#安装和使用mockgen" class="headerlink" title="安装和使用mockgen"></a>安装和使用mockgen</h2><figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">go</span> get github.com/golang/mock/gomock<br><span class="hljs-keyword">go</span> insatll github.com/golang/mock/mockgen<br><span class="hljs-comment">//安装完成后可以在命令行中直接使用mockgen命令（需要将$GOPATH/bin添加到PATH环境变量）</span><br></code></pre></td></tr></table></figure>
 
 <p>​    </p>
 <figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">mockgen -<span class="hljs-keyword">source</span> xxx.<span class="hljs-keyword">go</span> [<span class="hljs-keyword">options</span>]<br></code></pre></td></tr></table></figure>
