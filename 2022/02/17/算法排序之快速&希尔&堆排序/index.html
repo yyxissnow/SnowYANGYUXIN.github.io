@@ -31,7 +31,7 @@
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E5%BF%AB%E9%80%9F&%E5%B8%8C%E5%B0%94&%E5%A0%86%E6%8E%92%E5%BA%8F/image-20210329124619316.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E5%BF%AB%E9%80%9F&%E5%B8%8C%E5%B0%94&%E5%A0%86%E6%8E%92%E5%BA%8F/image-20210329125243456.png">
 <meta property="article:published_time" content="2022-02-17T12:21:21.420Z">
-<meta property="article:modified_time" content="2022-02-17T13:09:07.762Z">
+<meta property="article:modified_time" content="2022-02-18T01:57:03.944Z">
 <meta property="article:author" content="Snow">
 <meta property="article:tag" content="Golang">
 <meta property="article:tag" content="排序">
@@ -301,8 +301,8 @@
 
 
 
-<h2 id="堆排序法"><a href="#堆排序法" class="headerlink" title="堆排序法"></a>堆排序法</h2><p>其将数组中的数加入堆复杂度是 <strong>nlogn</strong></p>
-<p>将堆中依次<strong>ExtractMax</strong>复杂度是 <strong>nlogn</strong></p>
+<h2 id="堆排序法"><a href="#堆排序法" class="headerlink" title="堆排序法"></a>堆排序法</h2><p>将数组中的数加入堆复杂度是 <strong>nlogn</strong></p>
+<p>将堆中依次 <strong>ExtractMax</strong> 复杂度是 <strong>nlogn</strong></p>
 <p>总复杂度是 <strong>2nlogn</strong></p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">HeapSort</span><span class="hljs-params">(arr []<span class="hljs-keyword">int</span>)</span></span> &#123;<br>   h := heap.NewMaxHeap(<span class="hljs-built_in">len</span>(arr))<br>   <span class="hljs-comment">//nlogn</span><br>   <span class="hljs-keyword">for</span> _, v := <span class="hljs-keyword">range</span> arr &#123;<br>      h.Add(v)<br>   &#125;<br>   <span class="hljs-comment">//nlogn</span><br>   <span class="hljs-keyword">for</span> i := <span class="hljs-built_in">len</span>(arr) - <span class="hljs-number">1</span>; i &gt;= <span class="hljs-number">0</span>; i-- &#123;<br>      arr[i] = h.ExtractMax()<br>   &#125;<br>&#125;<br><br><span class="hljs-comment">//取出元素 取出最大的元素 就是删除头结点</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(h *MaxHeap)</span> <span class="hljs-title">ExtractMax</span><span class="hljs-params">()</span> <span class="hljs-title">int</span></span> &#123;<br>	res := h.FindMax()<br>	<span class="hljs-comment">//将尾结点和头结点交换，再删除尾结点，相当于删除了头结点</span><br>	h.Array.Swap(<span class="hljs-number">0</span>, h.Array.Length<span class="hljs-number">-1</span>)<br>	h.Array.RemoveLast()<br>	<span class="hljs-comment">//但是此时不满足完全二叉树的性质，需要进一步整理</span><br>	h.shiftDown(<span class="hljs-number">0</span>)<br>	<span class="hljs-keyword">return</span> res<br>&#125;<br><br><span class="hljs-comment">//从头结点就是，找出自己左右孩子中最大的值，如果自己比它小，则进行交换</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(h *MaxHeap)</span> <span class="hljs-title">shiftDown</span><span class="hljs-params">(k <span class="hljs-keyword">int</span>)</span></span> &#123;<br>	<span class="hljs-keyword">for</span> leftChild(k) &lt; h.Array.GetSize() &#123; <span class="hljs-comment">//判断左孩子是否存在</span><br>		j := leftChild(k)<br>		<span class="hljs-keyword">if</span> j+<span class="hljs-number">1</span> &lt; h.Array.GetSize() &amp;&amp; h.Array.Get(j) &lt; h.Array.Get(j+<span class="hljs-number">1</span>) &#123; <span class="hljs-comment">//j+1就是右孩子</span><br>			j = rightChild(k)<br>		&#125;<br>		<span class="hljs-comment">//此时data[j]就是左右孩子中最大的值</span><br>		<span class="hljs-keyword">if</span> h.Array.Get(j) &lt;= h.Array.Get(k) &#123;<br>			<span class="hljs-keyword">break</span><br>		&#125;<br>		h.Array.Swap(k, j)<br>		k = j<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
@@ -348,7 +348,7 @@
 <p><img src="/img/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E5%BF%AB%E9%80%9F&%E5%B8%8C%E5%B0%94&%E5%A0%86%E6%8E%92%E5%BA%8F/image-20210329114839253.png" srcset="/img/loading.gif" lazyload alt="image-20210329114839253"></p>
 <p>​    </p>
 <p><strong>基础排序算法的稳定性</strong></p>
-<p>插入排序法中相同的元素<strong>没有机会</strong>进行**”跳跃”**</p>
+<p>插入排序法中相同的元素<strong>没有机会</strong>进行 “<strong>跳跃</strong>“</p>
 <p><img src="/img/%E7%AE%97%E6%B3%95%E6%8E%92%E5%BA%8F%E4%B9%8B%E5%BF%AB%E9%80%9F&%E5%B8%8C%E5%B0%94&%E5%A0%86%E6%8E%92%E5%BA%8F/image-20210329124619316.png" srcset="/img/loading.gif" lazyload alt="image-20210329124619316"></p>
 <p>​    </p>
 <p><strong>高级排序算法的稳定性</strong></p>
