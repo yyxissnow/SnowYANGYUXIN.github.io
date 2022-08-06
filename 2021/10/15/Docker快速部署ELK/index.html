@@ -27,7 +27,7 @@
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015093911524.png">
 <meta property="og:image" content="https://snowyangyuxin.github.io/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015094607601.png">
 <meta property="article:published_time" content="2021-10-15T06:22:56.000Z">
-<meta property="article:modified_time" content="2021-10-15T06:22:56.000Z">
+<meta property="article:modified_time" content="2022-08-06T05:50:07.312Z">
 <meta property="article:author" content="Snow">
 <meta property="article:tag" content="Docker">
 <meta name="twitter:card" content="summary_large_image">
@@ -286,7 +286,7 @@
 <p><strong>docker 部署</strong></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run -it -d -p 5601:5601  -v /usr/elk/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml -v /etc/localtime:/etc/localtime -e ELASTICSEARCH_URL=http://xx.xx.xx.xx:9200 --network=docker_elk_test --name kibana_test docker.elastic.co/kibana/kibana:7.3.0<br></code></pre></td></tr></table></figure>
 
-<p>启动后本子查看 <strong>localhost:5601</strong></p>
+<p>启动后本机查看 <strong>localhost:5601</strong></p>
 <p><img src="/img/Docker%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2ELK/image-20211015093911524.png" srcset="/img/loading.gif" lazyload alt="image-20211015093911524"></p>
 <h2 id="部署logstash"><a href="#部署logstash" class="headerlink" title="部署logstash"></a>部署logstash</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">mkdir /usr/elk/logstash/config<br>cd /usr/elk/logstash/config<br>vim logstash.yml<br>mkdir /usr/elk/logstash/pipeline<br>cd /usr/elk/logstash/pipeline<br>vim logstash.conf<br></code></pre></td></tr></table></figure>
 
