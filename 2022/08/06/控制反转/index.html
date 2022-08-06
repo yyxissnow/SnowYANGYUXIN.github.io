@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/bg/lvsan.jpg">
+  <link rel="icon" href="/img/bg/lvsan.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Snow">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="使用控制反转和依赖注入可以减少项目的耦合度，有利于后续功能的拓展">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go实现控制反转和依赖注入">
+<meta property="og:url" content="https://snowyangyuxin.github.io/2022/08/06/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/index.html">
+<meta property="og:site_name" content="Snow的博客">
+<meta property="og:description" content="使用控制反转和依赖注入可以减少项目的耦合度，有利于后续功能的拓展">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/ioc.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/object-dep.png">
+<meta property="og:image" content="https://snowyangyuxin.github.io/img/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/e2ce8ff5633d22eb11021febe7f61e93.jpeg">
+<meta property="article:published_time" content="2022-08-06T05:34:41.711Z">
+<meta property="article:modified_time" content="2022-08-06T05:43:41.870Z">
+<meta property="article:author" content="Snow">
+<meta property="article:tag" content="Golang">
+<meta property="article:tag" content="设计">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://snowyangyuxin.github.io/img/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/ioc.png">
+  
+  
+  <title>Go实现控制反转和依赖注入 - Snow的博客</title>
+
+  <link  rel="stylesheet" href="https://unpkg.com/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://fastly.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="https://unpkg.com/hint.css@2/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://fastly.jsdelivr.net/npm/highlight.js@10/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://unpkg.com/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"snowyangyuxin.github.io","root":"/","version":"1.8.14","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 6.0.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Snow的博客</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg/lvsan.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="Go实现控制反转和依赖注入">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-08-06 13:34" pubdate>
+        2022年8月6日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.7k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      23 分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Go实现控制反转和依赖注入</h1>
+            
+            <div class="markdown-body">
+              <h2 id="当前问题"><a href="#当前问题" class="headerlink" title="当前问题"></a>当前问题</h2><ul>
+<li>当模块A依赖B，模块B依赖C，模块C依赖D，模块D依赖模块A时，GO编译就会报错 <em>import cycle not allowed</em> （循环依赖）</li>
+</ul>
+<p><img src="/img/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/ioc.png" srcset="/img/loading.gif" lazyload alt="ioc"></p>
+<ul>
+<li>多个模块就像多个齿轮一样共同协作完成任务，但是也可能会出现一个齿轮出现问题将会影响到这个齿轮组的运转的情况</li>
+<li>真实的服务可能需要依赖很多其他的服务，比如第三方，内部模块或者其他内部服务，当多个模块相互依赖增多时，也会增加项目的耦合，不利于后续功能拓展</li>
+</ul>
+<p><img src="/img/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/object-dep.png" srcset="/img/loading.gif" lazyload alt="object-dep"></p>
+<h2 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h2><blockquote>
+<p>控制反转</p>
+</blockquote>
+<p>控制反转（<code>Inversion of Control</code>）（<code>IOC</code>）是一种是面向对象编程中的一种设计原则，用来<strong>降低计算机代码之间的耦合度</strong>。其基本思想是：借助于“第三方”实现具有依赖关系的对象之间的解耦</p>
+<p><img src="/img/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/e2ce8ff5633d22eb11021febe7f61e93.jpeg" srcset="/img/loading.gif" lazyload alt="e2ce8ff5633d22eb11021febe7f61e93"></p>
+<p>由于引进了中间位置的“第三方”，也就是<code>IOC</code>容器，使得A、B、C、D这4个对象没有了耦合关系，<strong>将控制权都交给了<code>IOC</code>，齿轮之间的转动全部依靠“第三方”</strong>，对象A获得依赖对象B的过程,由主动行为变为了被动行为，<strong>控制权颠倒过来了</strong>，这就是“控制反转”这个名称的由来</p>
+<p>对象之间已经没有了耦合关系，彼此毫无联系，这样的话，当你在实现A的时候，根本无须再去考虑B、C和D了，对象之间的依赖关系已经降低到了最低程度</p>
+<p>​    </p>
+<blockquote>
+<p>依赖注入</p>
+</blockquote>
+<p>假设原本A依赖B，现在<code>IOC</code>需要<code>new</code>一个B出来，然后把B的实例注入到A里面去，这样A就可以正常使用基于B的方法了，这个过程被称为依赖项注入，而基于<code>IOC</code>的这种方法就叫做依赖注入</p>
+<p>“<strong>获得依赖对象的过程被反转了</strong>”。控制被反转之后，获得依赖对象的过程由自身管理变为了由<code>IOC</code>容器主动注入</p>
+<h2 id="代码演示"><a href="#代码演示" class="headerlink" title="代码演示"></a>代码演示</h2><blockquote>
+<p>当前场景</p>
+</blockquote>
+<p>目前有一个创建文章<code>Article</code>的接口，分别做了http接口和gRPC接口。为了避免代码冗余，现在将具体逻辑放在gRPC中实现，而http接口将会调用gRPC函数来实现对应功能，而gRPC方法的调用需要创建相应的实例才能调用，下面是改造前的代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></div></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// /apps/artcicle/http/http.go http接口</span><br><span class="hljs-keyword">var</span> service *Handler<br><br><span class="hljs-keyword">type</span> Handler <span class="hljs-keyword">struct</span> &#123;<br>	svc article.Service <span class="hljs-comment">//实现gRPC中article相关方法的接口</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Init</span><span class="hljs-params">()</span></span> &#123;<br>  ......<br>   <br>  service = NewArtcileService() <span class="hljs-comment">//在创建router前初始化gRPC实例并传进每一个接口中</span><br>  r := NewRouter(service)<br>  <br>  ......<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewRouter</span><span class="hljs-params">(s *ArticleService)</span></span>&#123;<br>  r := gin.Default()<br>  r.POST(<span class="hljs-string">&quot;/article&quot;</span> ,s.createArticle) <span class="hljs-comment">//传入gRPC实例</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时可以看出在http包中，创建router前，初始化了gRPC调用的实例，并将此实例传进了http具体的业务函数中，从而实现能在http接口中使用gRPC的函数，<strong>减少代码冗余的同时增加了http模块对gRPC模块的依赖</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// /apps/artcicle/http/article.go http接口</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(h *Handler)</span> <span class="hljs-title">createArticle</span><span class="hljs-params">(c *gin.Context)</span></span> &#123;<br>	......<br><br>	rsp, err := h.svc.CreateArticle(c.Request.Context(), req) <span class="hljs-comment">//调用gRPC方法</span><br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		response.Failed(ßerr)<br>		<span class="hljs-keyword">return</span><br>	&#125;<br><br>	......<br>&#125;<br><br><span class="hljs-comment">// /apps/article/grpc/article.go grpc接口</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(a *ArticleService)</span> <span class="hljs-title">CreateArticle</span><span class="hljs-params">(ctx context.Context, req *artcile.Article)</span> <span class="hljs-params">(*article.Article, error)</span></span> &#123;<br>	......<br>  <br>	<span class="hljs-keyword">if</span> err := a.dao.save(ctx, article); err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>, err<br>	&#125;<br><br>	<span class="hljs-keyword">return</span> article, <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​    </p>
+<blockquote>
+<p>引入IOC</p>
+</blockquote>
+<p>下面是使用控制反转和依赖注入的模式后的代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// /apps/ioc.go</span><br><span class="hljs-keyword">import</span> _ <span class="hljs-string">&quot;xxx/apps/article/grpc&quot;</span> <span class="hljs-comment">// 引入gRPC包，目的是为了使用其中的init方法为ioc容器中new一个article的grpc实例</span><br><br><span class="hljs-keyword">var</span> ArticleService Article.Service <span class="hljs-comment">//实现gRPC中article相关方法的接口</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Register</span><span class="hljs-params">()</span></span> &#123; <br>  ...... <span class="hljs-comment">//省略的逻辑：为http的Handler创建包含Config()的接口，然后在ioc中会有函数去将各个调用模块创建的接口会存进map ginApps中</span><br>  <br>  <span class="hljs-keyword">for</span> _, v := <span class="hljs-keyword">range</span> ginApps &#123;<br>		v.Config() <span class="hljs-comment">//主动将gRPC实例注入到调用模块中</span><br>	&#125;<br>&#125;<br><br><span class="hljs-comment">// /apps/article/grpc/grpc.go grpc接口</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">init</span><span class="hljs-params">()</span></span> &#123;<br>  ioc.ArticleService = NewArticleService() <span class="hljs-comment">// 为ioc容器中new一个grpc实例，则后续可以将该实例注入到其他模块中，就可以在其他模块中使用本模块的方法</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// apps/artcicle/http/http.go http接口</span><br><span class="hljs-keyword">var</span> service *Handler<br><br><span class="hljs-keyword">type</span> Handler <span class="hljs-keyword">struct</span> &#123;<br>	svc article.Service <span class="hljs-comment">//实现gRPC中article相关方法的接口</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(h *Handler)</span> <span class="hljs-title">Conifg</span><span class="hljs-params">()</span></span> &#123; <span class="hljs-comment">//该方法被ioc容器调用</span><br>  h.svc = apps.ArticleService <span class="hljs-comment">//ioc中出初始化的gRPC实例注入到http模块中</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>从上面改进后的代码可以看出，之前的逻辑是是http模块依赖gRPC模块，使用<code>IOC</code>容器后，逻辑就变成了<code>IOC</code>容器初始化gRPC模块的实例，然后再将该实例注入到http模块中，解除了http模块和gRPC模块之间的耦合</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li><p>使用控制反转和依赖注入可以减少项目的耦合度，有利于后续功能的拓展</p>
+</li>
+<li><p>项目中由于引入了第三方<code>IOC</code>容器，生成对象的步骤变得有些复杂，本来是两者之间的事情，现在又凭空多出一道手续，会使得项目变得不太直观</p>
+</li>
+</ul>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Golang/">Golang</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%AE%BE%E8%AE%A1/">设计</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/05/04/Go_Mock/">
+                        <span class="hidden-mobile">Gomock</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+    
+  </div>
+  
+
+  
+  <!-- 备案信息 -->
+  <div class="beian">
+    <span>
+      <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+        
+      </a>
+    </span>
+    
+      
+        <span>
+          <a
+            href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=https://beian.miit.gov.cn/"
+            rel="nofollow noopener"
+            class="beian-police"
+            target="_blank"
+          >
+            
+              <span style="visibility: hidden; width: 0">|</span>
+              <img src="/img/beian/beian.jpg" srcset="/img/loading.gif" lazyload alt="police-icon"/>
+            
+            <span>蜀ICP备2021020213号</span>
+          </a>
+        </span>
+      
+    
+  </div>
+
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://unpkg.com/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://unpkg.com/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://unpkg.com/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://unpkg.com/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://unpkg.com/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://unpkg.com/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://unpkg.com/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://unpkg.com/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+
+
+  <script  src="https://unpkg.com/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+        typing(title);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
